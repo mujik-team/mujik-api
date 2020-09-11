@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "tsc-watch  --onsuccess \"node dist/index.js\"",
     "pm2": "pm2 start ecosystem.config.js"
   },
   "devDependencies": {
@@ -19,6 +19,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "express-async-errors": "^3.1.1"
+    "express-async-errors": "^3.1.1",
+    "tsc-watch": "^4.2.9"
   }
 }
