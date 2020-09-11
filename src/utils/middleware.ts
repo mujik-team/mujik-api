@@ -16,9 +16,3 @@ export const errorHandler = (error: any, _request: any, response: any, next: any
   logError(error.message);
   next(error);
 };
-
-// module.exports = {
-//   requestLogger,
-//   unkownEndpoint,
-//   errorHandler
-// };
