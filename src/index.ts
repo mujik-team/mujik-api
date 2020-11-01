@@ -1,7 +1,7 @@
-import { app } from './app';
-import * as http from 'http';
-import { PORT } from './utils/config';
-import { logInfo } from './utils/logger';
+import { app } from "./app";
+import * as http from "http";
+import { PORT } from "./utils/config";
+import { logInfo } from "./utils/logger";
 
 const server = http.createServer(app);
 
