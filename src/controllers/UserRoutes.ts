@@ -101,4 +101,23 @@ export const UserRoutes: Route[] = [
       }
     },
   },
+  /**
+   * Follow/Unfollow a user.
+   */
+  {
+    path: "/user/follow/:id",
+    method: "post",
+    handler: async (req, res) => {
+      const { id } = req.params;
+      const { followId, follow } = req.body;
+      const followed = await UserService.FollowUser(id, followId, follow);
+
+      if (followed) {
+        res.json(ResultOK(`${id} followed/unfollowed ${followId}`));
+      } else {
+        res.status(400).json(ResultError("Error following user"));
+      }
+
+    }
+  },
 ];
