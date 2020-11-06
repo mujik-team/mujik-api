@@ -1,6 +1,7 @@
 import { Route } from "./_types";
-import * as UserService from "../services/UserService";
 import { ResultError, ResultOK } from "../utils/ResultGenerator";
+import { User } from "../model/UserModel";
+import { userService } from "../app";
 
 /**
  * 1. post = register a user
@@ -10,42 +11,27 @@ import { ResultError, ResultOK } from "../utils/ResultGenerator";
  * 5. delete = delete a user
  */
 
-
 export const UserRoutes: Route[] = [
   /**
    * Get a user by username.
    */
-  // {
-  //   path: "/user/:username",
-  //   method: "get",
-  //   handler: async (req, res) => {
-  //     console.log(req.params);
-  //     const { username } = req.params;
-  //     const user = await UserService.GetByUsername(username);
-
-  //     if (user) {
-  //       res.json(ResultOK(`Retrieved user ${username}.`, { user }));
-  //     } else {
-  //       res.status(400).json(ResultError("Error retrieving user."));
-  //     }
-  //   },
-  // },
-  /**
-   * Get a user by id
-   */
   {
-    path: "/user/:id",
+    path: "/user/:username",
     method: "get",
     handler: async (req, res) => {
-      const  { id }  = req.params;
-      const user = await UserService.GetUser(id);
+      console.log(req.params);
+      const { username } = req.params;
+      const user: any = await userService.GetByUsername(username);
 
       if (user) {
-        res.json(ResultOK(`Retrieved user ${user.username}`, { user }));
+        delete user.password;
+        res.json(ResultOK(`Retrieved user ${username}.`, { user }));
       } else {
-        res.status(400).json(ResultError("Error retrieving user."));
+        res
+          .status(400)
+          .json(ResultError("User with that username doesn't exist."));
       }
-    }
+    },
   },
   /**
    * Create a new user.
@@ -54,14 +40,25 @@ export const UserRoutes: Route[] = [
     path: "/user/",
     method: "post",
     handler: async (req, res) => {
-      const user = req.body;
-      console.log(user);
-      const newUser = await UserService.CreateUser(user);
+      // Get only the required fields from user body.
+      const { username, email, password, bio } = req.body;
 
-      if (newUser) {
-        res.json(ResultOK(`Created user ${user}.`, { user }));
-      } else {
-        res.status(400).json(ResultError("Error creating user."));
+      // Insert user into db.
+      try {
+        const user: User = new User(username, email, password);
+        user.profile.bio = bio || "";
+
+        const newUser: any = await userService.CreateUser(user);
+        delete newUser.password; // remove password from result.
+
+        // Successfully created new user.
+        res.json(
+          ResultOK(`Created user ${username}.`, {
+            user: newUser,
+          })
+        );
+      } catch (err) {
+        res.status(400).json(ResultError("Error creating user.", err));
       }
     },
   },
@@ -74,10 +71,12 @@ export const UserRoutes: Route[] = [
     handler: async (req, res) => {
       const { id } = req.params;
       const user = req.body;
-      const updatedUser = await UserService.UpdateUser(id, user);
-      
+      const updatedUser = await userService.UpdateUser(id, user);
+
       if (updatedUser) {
-        res.json(ResultOK(`Updated user ${updatedUser.username}`, { updatedUser }));
+        res.json(
+          ResultOK(`Updated user ${updatedUser.username}`, { updatedUser })
+        );
       } else {
         res.status(400).json(ResultError("Error updating user"));
       }
@@ -90,13 +89,13 @@ export const UserRoutes: Route[] = [
   {
     path: "/user/:id",
     method: "delete",
-    handler: async (req, res) => {
+    handler: async (req, res, next) => {
       const { id } = req.params;
-      const deletdUser = await UserService.DeleteUser(id);
 
-      if (deletdUser) {
+      try {
+        const deletdUser = await userService.DeleteUser(id);
         res.json(ResultOK(`Deleted user ${deletdUser.username}`));
-      } else {
+      } catch (err) {
         res.status(400).json(ResultError("Error deleting user"));
       }
     },
@@ -105,19 +104,18 @@ export const UserRoutes: Route[] = [
    * Follow/Unfollow a user.
    */
   {
-    path: "/user/follow/:id",
+    path: "/user/:id/follow",
     method: "post",
     handler: async (req, res) => {
       const { id } = req.params;
       const { followId, follow } = req.body;
-      const followed = await UserService.FollowUser(id, followId, follow);
-
-      if (followed) {
+      try {
+        await userService.FollowUser(id, followId, follow);
         res.json(ResultOK(`${id} followed/unfollowed ${followId}`));
-      } else {
-        res.status(400).json(ResultError("Error following user"));
+      } catch (err) {
+        console.log(err);
+        res.json(ResultError("Unable to follow/unfollow."));
       }
-
-    }
+    },
   },
 ];

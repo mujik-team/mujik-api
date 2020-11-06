@@ -3,10 +3,12 @@ import cors from "cors";
 import * as middleware from "./utils/middleware";
 import { applyRoutes } from "./controllers/_AppRoutes";
 import dotenv from "dotenv";
-import { initDb } from "./utils/db";
+import { db, initDb } from "./utils/db";
 import { setupCleanup } from "./utils/cleanup";
+import { UserService } from "./services/UserService";
 
 export const app = express.default();
+export let userService: UserService;
 
 // Load environment variables from .env.
 dotenv.config();
@@ -22,7 +24,9 @@ app.use(middleware.unkownEndpoint);
 app.use(middleware.errorHandler);
 
 // Connect to DB.
-initDb();
+initDb().then(() => {
+  userService = new UserService(db.collection("user"));
+});
 
 // Setup cleanup functions.
 setupCleanup();

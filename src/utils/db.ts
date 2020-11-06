@@ -10,12 +10,11 @@ console.log("MONGOPORT", MONGO_PORT);
 export const client = new MongoClient(uri);
 export let db: Db;
 
-
 export async function initDb() {
   try {
-	  // setTimeout(() => console.log("start ya mf"), 1500);
     await client.connect();
     db = client.db("mujik");
+
     console.info("Successfully connected to DB.");
   } catch (err) {
     console.error(`Unable to connect to DB.`, err);
