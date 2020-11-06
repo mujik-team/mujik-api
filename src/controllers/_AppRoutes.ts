@@ -1,9 +1,15 @@
 import { Router } from "express";
+import { AuthRoutes } from "./AuthRoutes";
 import { MixtapeRoutes } from "./MixtapeRoutes";
 import { TournamentRoutes } from "./TournamentRoutes";
 import { UserRoutes } from "./UserRoutes";
 
-const AppRoutes = [...UserRoutes, ...MixtapeRoutes, ...TournamentRoutes];
+const AppRoutes = [
+  ...AuthRoutes,
+  ...UserRoutes,
+  ...MixtapeRoutes,
+  ...TournamentRoutes,
+];
 
 /**
  * Applies all of the routes to the router provided.

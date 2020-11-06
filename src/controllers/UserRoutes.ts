@@ -2,6 +2,7 @@ import { Route } from "./_types";
 import { ResultError, ResultOK } from "../utils/ResultGenerator";
 import { User } from "../model/UserModel";
 import { userService } from "../app";
+import { AuthService } from "../services/AuthService";
 
 /**
  * 1. post = register a user
@@ -18,20 +19,23 @@ export const UserRoutes: Route[] = [
   {
     path: "/user/:username",
     method: "get",
-    handler: async (req, res) => {
-      console.log(req.params);
-      const { username } = req.params;
-      const user: any = await userService.GetByUsername(username);
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        console.log(req.params);
+        const { username } = req.params;
+        const user: any = await userService.GetByUsername(username);
 
-      if (user) {
-        delete user.password;
-        res.json(ResultOK(`Retrieved user ${username}.`, { user }));
-      } else {
-        res
-          .status(400)
-          .json(ResultError("User with that username doesn't exist."));
-      }
-    },
+        if (user) {
+          delete user.password;
+          res.json(ResultOK(`Retrieved user ${username}.`, { user }));
+        } else {
+          res
+            .status(400)
+            .json(ResultError("User with that username doesn't exist."));
+        }
+      },
+    ],
   },
   /**
    * Create a new user.
