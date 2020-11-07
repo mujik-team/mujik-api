@@ -1,5 +1,5 @@
 import { Route } from "./_types";
-import { ResultError, ResultOK } from "../utils/ResultGenerator";
+import { ResultError, ResultOK, ResultWarning } from "../utils/ResultGenerator";
 import { User } from "../model/UserModel";
 import { userService } from "../app";
 import { AuthService } from "../services/AuthService";
@@ -30,9 +30,7 @@ export const UserRoutes: Route[] = [
           delete user.password;
           res.json(ResultOK(`Retrieved user ${username}.`, { user }));
         } else {
-          res
-            .status(400)
-            .json(ResultError("User with that username doesn't exist."));
+          res.json(ResultError("User with that username doesn't exist."));
         }
       },
     ],
@@ -62,7 +60,7 @@ export const UserRoutes: Route[] = [
           })
         );
       } catch (err) {
-        res.status(400).json(ResultError("Error creating user.", err));
+        res.json(ResultError("Error creating user.", err));
       }
     },
   },
@@ -70,19 +68,22 @@ export const UserRoutes: Route[] = [
    * Update the details of a user.
    */
   {
-    path: "/user/:id",
+    path: "/user/:username",
     method: "put",
     handler: async (req, res) => {
-      const { id } = req.params;
-      const user = req.body;
-      const updatedUser = await userService.UpdateUser(id, user);
+      const { username } = req.params;
+      const { profile } = req.body;
+      const updatedUser = await userService.UpdateUserProfile(
+        username,
+        profile
+      );
 
       if (updatedUser) {
         res.json(
-          ResultOK(`Updated user ${updatedUser.username}`, { updatedUser })
+          ResultOK(`Updated user profile of ${username}`, { updatedUser })
         );
       } else {
-        res.status(400).json(ResultError("Error updating user"));
+        res.json(ResultError("Error updating user"));
       }
     },
   },
@@ -100,7 +101,7 @@ export const UserRoutes: Route[] = [
         const deletdUser = await userService.DeleteUser(id);
         res.json(ResultOK(`Deleted user ${deletdUser.username}`));
       } catch (err) {
-        res.status(400).json(ResultError("Error deleting user"));
+        res.json(ResultError("Error deleting user"));
       }
     },
   },
@@ -108,18 +109,24 @@ export const UserRoutes: Route[] = [
    * Follow/Unfollow a user.
    */
   {
-    path: "/user/:id/follow",
+    path: "/user/follow",
     method: "post",
-    handler: async (req, res) => {
-      const { id } = req.params;
-      const { followId, follow } = req.body;
-      try {
-        await userService.FollowUser(id, followId, follow);
-        res.json(ResultOK(`${id} followed/unfollowed ${followId}`));
-      } catch (err) {
-        console.log(err);
-        res.json(ResultError("Unable to follow/unfollow."));
-      }
-    },
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        const { username, follow } = req.body;
+        const currentUser: any = req.user;
+
+        try {
+          await userService.FollowUser(currentUser.username, username, follow);
+          res.json(
+            ResultOK(`${currentUser.username} followed/unfollowed ${username}`)
+          );
+        } catch (err) {
+          console.log(err);
+          res.json(ResultError("Unable to follow/unfollow."));
+        }
+      },
+    ],
   },
 ];

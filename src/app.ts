@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { db, initDb } from "./utils/db";
 import { setupCleanup } from "./utils/cleanup";
 import { UserService } from "./services/UserService";
+
 import session from "express-session";
 import { AuthService } from "./services/AuthService";
 
@@ -15,17 +16,13 @@ export let userService: UserService;
 // Load environment variables from .env.
 dotenv.config();
 
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session and passport.
-app.use(
-  session({
-    name: "mujik",
-    secret: process.env.SESSION_SECRET || "testsession",
-  })
-);
+
+app.use(cors());
+
+
 AuthService.init(app);
 app.use(middleware.requestLogger);
 

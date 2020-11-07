@@ -1,6 +1,6 @@
-export class User {
-  id?: string;
+import { userService } from "../app";
 
+export class User {
   constructor(
     public username: string,
     public email: string,
@@ -14,31 +14,38 @@ export class User {
       throw new Error("Password must be at least 6 characters.");
   }
 
-  followUser(userToFollow: User) {
+  static followUser(currentUser: User, userToFollow: User) {
     // Check if already followed user.
-    if (this.profile.following.includes(userToFollow.username)) {
+    if (currentUser.profile.following.includes(userToFollow.username)) {
       return false;
     }
 
-    this.profile.following.push(userToFollow.username);
-    userToFollow.profile.followers.push(this.username);
+    currentUser.profile.following.push(userToFollow.username);
+    userToFollow.profile.followers.push(currentUser.username);
     userToFollow.profile.totalFollowers += 1;
-    this.profile.totalFollowing += 1;
+    currentUser.profile.totalFollowing += 1;
+
+    userService.UpdateUser(currentUser.username, currentUser);
+    userService.UpdateUser(userToFollow.username, userToFollow);
     return true;
   }
 
-  unfollowUser(userToUnfollow: User) {
+  static unfollowUser(currentUser: User, userToUnfollow: User) {
     // Check if already not following user.
-    if (!this.profile.following.includes(userToUnfollow.username)) return true;
+    if (!currentUser.profile.following.includes(userToUnfollow.username))
+      return true;
 
-    this.profile.following = this.profile.following.filter(
-      (f) => f !== userToUnfollow.username
+    currentUser.profile.following = currentUser.profile.following.filter(
+      (f) => f === userToUnfollow.username
     );
     userToUnfollow.profile.followers = userToUnfollow.profile.followers.filter(
-      (f) => f !== userToUnfollow.username
+      (f) => f === userToUnfollow.username
     );
-    this.profile.totalFollowing -= 1;
+    currentUser.profile.totalFollowing -= 1;
     userToUnfollow.profile.totalFollowers -= 1;
+
+    userService.UpdateUser(currentUser.username, currentUser);
+    userService.UpdateUser(userToUnfollow.username, userToUnfollow);
 
     return true;
   }

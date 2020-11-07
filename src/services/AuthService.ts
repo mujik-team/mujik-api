@@ -1,6 +1,9 @@
 import { Router } from "express";
 import passport from "passport";
 import { userService } from "../app";
+
+import session from "express-session";
+
 import Local from "passport-local";
 import { User } from "../model/UserModel";
 import { Request, Response, NextFunction } from "express";
@@ -8,6 +11,12 @@ import { ResultError } from "../utils/ResultGenerator";
 
 export class AuthService {
   static init(app: Router) {
+    app.use(
+      session({
+        name: "mujik",
+        secret: process.env.SESSION_SECRET || "testsession",
+      })
+    );
     app.use(passport.initialize());
     app.use(passport.session());
 
@@ -34,6 +43,7 @@ export class AuthService {
 
   static isAuthenticated(req: Request, res: Response, next: NextFunction) {
     if (req.isAuthenticated()) return next();
-    else res.status(401).json(ResultError("User is not authenticated."));
+    else res.json(ResultError("User is not authenticated."));
+
   }
 }

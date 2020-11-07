@@ -1,9 +1,12 @@
 import { Collection } from "mongodb";
+import { Profile } from "passport";
 import { User } from "../model/UserModel";
 const mongo = require("mongodb");
 
 export class UserService {
-  constructor(private db: Collection<User>) {}
+  constructor(private db: Collection<User>) {
+    this.InitUserIndices();
+  }
 
   async InitUserIndices() {
     this.db.createIndex({ username: 1 }, { unique: true });
@@ -31,12 +34,19 @@ export class UserService {
     return user;
   }
 
-  async UpdateUser(id: string, user: User): Promise<any> {
-    const updatedUser = await this.db.replaceOne(
-      { _id: mongo.ObjectID(id) },
-      user
-    );
-    return updatedUser;
+  async UpdateUser(username: string, user: User): Promise<any> {
+    const updatedUser = await this.db.replaceOne({ username }, user);
+    return user;
+  }
+
+  async UpdateUserProfile(username: string, profile: any) {
+    const user = await this.GetByUsername(username);
+    if (user) {
+      user.profile = profile;
+      await this.UpdateUser(username, user);
+      return true;
+    }
+    return false;
   }
 
   async FollowUser(
@@ -48,7 +58,9 @@ export class UserService {
     const userToFollow = await this.GetByUsername(userToFollowUsername);
 
     if (user && userToFollow) {
-      follow ? user.followUser(userToFollow) : user.unfollowUser(userToFollow);
+      follow
+        ? User.followUser(user, userToFollow)
+        : User.unfollowUser(user, userToFollow);
       await this.UpdateUser(username, user);
       await this.UpdateUser(userToFollowUsername, userToFollow);
     } else {

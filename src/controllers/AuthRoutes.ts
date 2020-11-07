@@ -17,6 +17,33 @@ export const AuthRoutes: Route[] = [
     ],
   },
   {
+
+    path: "/reset",
+    method: "post",
+    handler: async (req, res) => {
+      const { resetCode, newPassword, username } = req.body;
+
+      const user = await userService.GetByUsername(username);
+
+      if (user) {
+        if (resetCode === "abracadabra") {
+          if (!newPassword || newPassword.length < 5) {
+            res.json(ResultWarning("Please check your new password."));
+            return;
+          }
+
+          user.password = newPassword;
+          await userService.UpdateUser(username, user);
+          res.json(ResultOK("Successfully reset credentials."));
+        } else {
+          res.json(ResultWarning("Incorrect reset code."));
+        }
+      } else {
+        res.json(ResultWarning(`User ${username} doesn't exist.`));
+      }
+    },
+  },
+  {
     path: "/logout",
     method: "post",
     handler: async (req, res) => {
