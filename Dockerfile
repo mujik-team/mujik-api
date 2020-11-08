@@ -6,11 +6,10 @@ COPY ./ ./
 
 # Install dependencies
 RUN yarn install --silent
-RUN yarn global add pm2
 
 # Build
 RUN yarn build
 
 EXPOSE 3001
 
-CMD ["yarn", "pm2"]
+CMD ["yarn", "start"]
