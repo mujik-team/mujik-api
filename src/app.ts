@@ -19,9 +19,9 @@ dotenv.config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-app.use(cors());
-
+if (process.env.NODE_ENV === "development") {
+  app.use(cors());
+}
 
 AuthService.init(app);
 app.use(middleware.requestLogger);
