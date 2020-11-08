@@ -9,6 +9,7 @@ import { UserService } from "./services/UserService";
 
 import session from "express-session";
 import { AuthService } from "./services/AuthService";
+import { setupCors } from "./utils/cors";
 
 export const app = express.default();
 export let userService: UserService;
@@ -19,9 +20,7 @@ dotenv.config();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-if (process.env.NODE_ENV === "development") {
-  app.use(cors());
-}
+setupCors(app);
 
 AuthService.init(app);
 app.use(middleware.requestLogger);
