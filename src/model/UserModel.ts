@@ -49,6 +49,15 @@ export class User {
 
     return true;
   }
+
+  static cleanForAPI(user: User) {
+    const userDoc: any = user;
+
+    delete userDoc["password"];
+    delete userDoc["_id"];
+
+    return userDoc;
+  }
 }
 
 class Profile {

@@ -29,14 +29,19 @@ export class UserService {
     return newUser;
   }
 
-  async DeleteUser(id: string): Promise<any> {
-    const user = await this.db.deleteOne({ _id: mongo.ObjectID(id) });
+  async DeleteUser(username: string): Promise<any> {
+    const user = await this.db.deleteOne({ username });
     return user;
   }
 
   async UpdateUser(username: string, user: User): Promise<any> {
-    const updatedUser = await this.db.replaceOne({ username }, user);
-    return user;
+    const userDoc: any = user;
+    delete userDoc["password"];
+    delete userDoc["_id"];
+
+    await this.db.updateOne({ username }, { $set: userDoc }, { upsert: false });
+    const updatedUser = await this.GetByUsername(username);
+    return updatedUser;
   }
 
   async UpdateUserProfile(username: string, profile: any) {

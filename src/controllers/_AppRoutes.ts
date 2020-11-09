@@ -3,8 +3,9 @@ import { AuthRoutes } from "./AuthRoutes";
 import { MixtapeRoutes } from "./MixtapeRoutes";
 import { TournamentRoutes } from "./TournamentRoutes";
 import { UserRoutes } from "./UserRoutes";
+import { Route } from "./_types";
 
-const AppRoutes = [
+const AppRoutes: Route[] = [
   ...AuthRoutes,
   ...UserRoutes,
   ...MixtapeRoutes,
@@ -15,7 +16,7 @@ const AppRoutes = [
  * Applies all of the routes to the router provided.
  * @param router Router to apply the routes to.
  */
-export const applyRoutes = (router: Router) => {
+export const setupRoutes = (router: Router) => {
   for (const route of AppRoutes) {
     const { method, path, handler } = route;
     router[method](path, handler);

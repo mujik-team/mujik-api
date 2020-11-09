@@ -27,8 +27,11 @@ export const UserRoutes: Route[] = [
         const user: any = await userService.GetByUsername(username);
 
         if (user) {
-          delete user.password;
-          res.json(ResultOK(`Retrieved user ${username}.`, { user }));
+          res.json(
+            ResultOK(`Retrieved user ${username}.`, {
+              user: User.cleanForAPI(user),
+            })
+          );
         } else {
           res.json(ResultError("User with that username doesn't exist."));
         }
@@ -72,15 +75,12 @@ export const UserRoutes: Route[] = [
     method: "put",
     handler: async (req, res) => {
       const { username } = req.params;
-      const { profile } = req.body;
-      const updatedUser = await userService.UpdateUserProfile(
-        username,
-        profile
-      );
+      const { user } = req.body;
+      const updatedUser = await userService.UpdateUser(username, user);
 
       if (updatedUser) {
         res.json(
-          ResultOK(`Updated user profile of ${username}`, { updatedUser })
+          ResultOK(`Updated user profile of ${username}`, { user: updatedUser })
         );
       } else {
         res.json(ResultError("Error updating user"));
@@ -98,8 +98,8 @@ export const UserRoutes: Route[] = [
       const { id } = req.params;
 
       try {
-        const deletdUser = await userService.DeleteUser(id);
-        res.json(ResultOK(`Deleted user ${deletdUser.username}`));
+        const deletedUser = await userService.DeleteUser(id);
+        res.json(ResultOK(`Deleted user ${deletedUser.username}`));
       } catch (err) {
         res.json(ResultError("Error deleting user"));
       }
