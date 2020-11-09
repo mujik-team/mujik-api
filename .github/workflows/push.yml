@@ -5,7 +5,6 @@ on:
     branches: master
 
 jobs:
-  
   test_and_deploy:
     runs-on: ubuntu-latest
     steps:
@@ -14,13 +13,13 @@ jobs:
         uses: actions/setup-node@v1.4.3
         with:
           node-version: 12.18.3
-          
+
         # Check if app successfully builds and do any unit tests..
       - name: Install Packages
         run: yarn install
       - name: Build project
         run: yarn build
-      
+
       # Setup environment for docker.
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -33,7 +32,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
+
       # Push image to DockerHub.
       - name: Build and push
         id: docker_build
@@ -44,4 +43,13 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
-      
+
+      - name: Redeploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          passphrase: ${{ secrets.VPS_KEY_PASS }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: ${{ secrets.VPS_SCRIPT }}
