@@ -36,11 +36,12 @@ export class User {
       return true;
 
     currentUser.profile.following = currentUser.profile.following.filter(
-      (f) => f === userToUnfollow.username
+      (f) => f !== userToUnfollow.username
     );
     userToUnfollow.profile.followers = userToUnfollow.profile.followers.filter(
-      (f) => f === userToUnfollow.username
+      (f) => f !== currentUser.username
     );
+
     currentUser.profile.totalFollowing -= 1;
     userToUnfollow.profile.totalFollowers -= 1;
 
