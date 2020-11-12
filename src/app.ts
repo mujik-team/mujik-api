@@ -5,12 +5,14 @@ import dotenv from "dotenv";
 import { db, initDb } from "./utils/db";
 import { setupCleanup } from "./utils/cleanup";
 import { UserService } from "./services/UserService";
+import { MixtapeService } from "./services/MixtapeService"; 
 
 import { AuthService } from "./services/AuthService";
 import { setupCors } from "./utils/cors";
 
 export const app = express.default();
 export let userService: UserService;
+export let mixtapeService: MixtapeService;
 
 // Load environment variables from .env.
 dotenv.config();
@@ -32,6 +34,7 @@ app.use(middleware.errorHandler);
 // Connect to DB.
 initDb().then(() => {
   userService = new UserService(db.collection("user"));
+  mixtapeService = new MixtapeService(db.collection("mixtape"))
 });
 
 // Setup cleanup functions.

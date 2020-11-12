@@ -1,5 +1,5 @@
 import { Route } from "./_types";
-import { ResultError, ResultOK, ResultWarning } from "../utils/ResultGenerator";
+import { ResultError, ResultOK } from "../utils/ResultGenerator";
 import { User } from "../model/UserModel";
 import { userService } from "../app";
 import { AuthService } from "../services/AuthService";
