@@ -4,7 +4,7 @@ export class Mixtape {
     public mixtapeName: string,
     public description: string,
     public tags = new Array<string>(),
-    public isPublic: boolean,
+    public isPrivate: boolean,
     public image: any = null,
     public lastUpdated = Date.now(),
     public followers = 0,

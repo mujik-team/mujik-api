@@ -46,7 +46,7 @@ export const MixtapeRoutes: Route[] = [
           mixtapeName,
           description,
           tags,
-          isPublic,
+          isPrivate,
           image, 
           lastUpdated,
           followers,
@@ -62,7 +62,7 @@ export const MixtapeRoutes: Route[] = [
             mixtapeName,
             description,
             tags,
-            isPublic,
+            isPrivate,
             image, 
             lastUpdated,
             followers,
@@ -101,7 +101,7 @@ export const MixtapeRoutes: Route[] = [
       AuthService.isAuthenticated,
       async (req, res) => {
         const { id } = req.params;
-        const mixtape = req.body;
+        const { mixtape } = req.body;
         console.log(id);
         console.log(mixtape);
         // const oldMixtape = await mixtapeService.GetMixtape(id)
@@ -109,6 +109,8 @@ export const MixtapeRoutes: Route[] = [
         const updatedMixtape = await mixtapeService.UpdateMixtape(id, mixtape);
         // add mixtape details to it
 
+        console.log(updatedMixtape)
+        
         if (updatedMixtape) {
           res.json(
             ResultOK(`Updated mixtape ${updatedMixtape.mixtape_name}`, {

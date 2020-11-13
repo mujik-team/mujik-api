@@ -79,7 +79,8 @@ export class MixtapeService {
     // console.log(id)
     // console.log(mixtape)
     const updatedMixtape = await this.db.replaceOne({ _id: mongo.ObjectID(id)  }, mixtape);
-    return updatedMixtape;
+    // console.log(updatedMixtape)
+    return updatedMixtape.ops[0];
   }
   
 
