@@ -22,7 +22,7 @@ export const MixtapeRoutes: Route[] = [
         const mixtape: any = await mixtapeService.GetMixtape(id);
         if (mixtape) {
           res.json(
-            ResultOK(`Retrieved mixtape ${mixtape.mixtape_name}.`, { mixtape })
+            ResultOK(`Retrieved mixtape ${mixtape.mixtapeName}.`, { mixtape })
           );
         } else {
           res.json(ResultError("Mixtape with that id doesn't exist."));
@@ -40,22 +40,20 @@ export const MixtapeRoutes: Route[] = [
     handler: [
       AuthService.isAuthenticated,
       async (req, res) => {
-        // Get only the required fields from user body.
         const {
           createdBy,
           mixtapeName,
           description,
           tags,
           isPrivate,
-          image, 
+          image,
           lastUpdated,
           followers,
           totalDuration,
           songs,
-          tournamentsWon
+          tournamentsWon,
         } = req.body;
 
-        // Insert user into db.
         try {
           const mixtape: Mixtape = new Mixtape(
             createdBy,
@@ -63,7 +61,7 @@ export const MixtapeRoutes: Route[] = [
             description,
             tags,
             isPrivate,
-            image, 
+            image,
             lastUpdated,
             followers,
             totalDuration,
@@ -71,12 +69,7 @@ export const MixtapeRoutes: Route[] = [
             tournamentsWon
           );
           const newMixtape: any = await mixtapeService.CreateMixtape(mixtape);
-          console.log(newMixtape);
-          res.json(
-            ResultOK(`Created mixtape ${mixtapeName}.`, {
-              mixtape: newMixtape,
-            })
-          );
+
           // Add the mixtape to the user
           const currentUser: any = await userService.GetByUsername(createdBy);
           const profile = currentUser.profile;
@@ -84,6 +77,12 @@ export const MixtapeRoutes: Route[] = [
           const updatedUser = await userService.UpdateUserProfile(
             createdBy,
             profile
+          );
+
+          res.json(
+            ResultOK(`Created mixtape ${mixtapeName}.`, {
+              mixtape: newMixtape,
+            })
           );
         } catch (err) {
           res.json(ResultError("Error creating mixtape.", err));
@@ -101,30 +100,23 @@ export const MixtapeRoutes: Route[] = [
       AuthService.isAuthenticated,
       async (req, res) => {
         const { id } = req.params;
-        const { mixtape } = req.body;
-        console.log(id);
-        console.log(mixtape);
-        // const oldMixtape = await mixtapeService.GetMixtape(id)
-        // mixtape.mixtapeDetails = oldMixtape?.mixtapeDetails
-        const updatedMixtape = await mixtapeService.UpdateMixtape(id, mixtape);
-        // add mixtape details to it
+        const mixtape = req.body;
+        delete mixtape._id;
 
-        console.log(updatedMixtape)
-        
+        const updatedMixtape = await mixtapeService.UpdateMixtape(id, mixtape);
+
         if (updatedMixtape) {
           res.json(
             ResultOK(`Updated mixtape ${updatedMixtape.mixtape_name}`, {
-              updatedMixtape,
+              mixtape,
             })
           );
         } else {
-          res.json(ResultError("Error updating user"));
+          res.json(ResultError("Error updating mixtape."));
         }
       },
     ],
   },
-
-
 
   /**
    * Delete a mixtape.
@@ -140,21 +132,22 @@ export const MixtapeRoutes: Route[] = [
         try {
           const deletedMixtape = await mixtapeService.DeleteMixtape(id);
           res.json(ResultOK(`Deleted mixtape ${deletedMixtape}`));
+
+          // remove from the user mixtapes
+          // Add the mixtape to the user
+          const currentUser: any = await userService.GetByUsername(
+            mixtape_deleted.createdBy
+          );
+          const profile = currentUser.profile;
+          const index = profile.mixtapes.indexOf(String(mixtape_deleted._id));
+          profile.mixtapes.splice(index, 1);
+          const updatedUser = await userService.UpdateUserProfile(
+            mixtape_deleted.createdBy,
+            profile
+          );
         } catch (err) {
           res.json(ResultError("Error deleting mixtape"));
         }
-        // remove from the user mixtapes
-        // Add the mixtape to the user
-        const currentUser: any = await userService.GetByUsername(
-          mixtape_deleted.createdBy
-        );
-        const profile = currentUser.profile;
-        const index = profile.mixtapes.indexOf(String(mixtape_deleted._id));
-        profile.mixtapes.splice(index, 1);
-        const updatedUser = await userService.UpdateUserProfile(
-          mixtape_deleted.createdBy,
-          profile
-        );
       },
     ],
   },
@@ -166,7 +159,7 @@ export const MixtapeRoutes: Route[] = [
       async (req, res, next) => {
         const query = req.body;
 
-        // Create the advanced query        
+        // Create the advanced query
         // console.log(query);
         const mixtape: any = await mixtapeService.GetMixtapeByQuery(query);
         // res.json(ResultOK("Found the query", { mixtape }));
@@ -176,9 +169,8 @@ export const MixtapeRoutes: Route[] = [
         } else {
           res.json(ResultError("Error finding mixtape"));
         }
-      
-      }
-    ]
+      },
+    ],
   },
   {
     path: "/mixtape/query/id",
@@ -186,19 +178,22 @@ export const MixtapeRoutes: Route[] = [
     handler: [
       AuthService.isAuthenticated,
       async (req, res, next) => {
-        const { id } = req.body;
+        const { ids } = req.body;
         try {
-          const mixtapes = await id.map(async (ids: string) => {
-            const mixtape: any = await mixtapeService.GetMixtape(ids);
+          const mixtapes = await ids.map(async (id: string) => {
+            const mixtape: any = await mixtapeService.GetMixtape(id);
+            // console.log(mixtape);
             return mixtape;
           });
-          Promise.all(mixtapes).then(result => res.json(ResultOK("Retrieved mixtapes", { result }))).catch((err) => res.json(ResultError("Cannot retrieve mixtape")));
-          // console.log(mixtapes);
-          // res.json(ResultOK("Retrieved mixtapes", { mixtapes }))
+          Promise.all(mixtapes)
+            .then((result) =>
+              res.json(ResultOK("Retrieved mixtapes", { mixtapes: result }))
+            )
+            .catch((err) => res.json(ResultError("Cannot retrieve mixtapes.")));
         } catch (err) {
           res.json(ResultError("Error retrieving mixtapes"));
         }
-      }
-    ]
-  }
+      },
+    ],
+  },
 ];

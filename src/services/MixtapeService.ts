@@ -30,20 +30,19 @@ export class MixtapeService {
   }
 
   async GetMixtapeByQuery(query: any): Promise<any> {
-
     const mongoQuery = [];
-        for (var QueryKey in query) {
-          console.log(QueryKey, query[QueryKey]);
-          // if (Array.isArray(query[QueryKey])) {
-          //   const newArray = [...query[QueryKey]];
-          //   console.log(newArray);
-          //   mongoQuery.push({ [QueryKey]: { $all: newArray.slice() } });
-          // } else {
-          //   mongoQuery.push({ [QueryKey]: query[QueryKey] });
-          // }
-          mongoQuery.push({ [QueryKey]: query[QueryKey] });
-        }
-  
+    for (var QueryKey in query) {
+      console.log(QueryKey, query[QueryKey]);
+      // if (Array.isArray(query[QueryKey])) {
+      //   const newArray = [...query[QueryKey]];
+      //   console.log(newArray);
+      //   mongoQuery.push({ [QueryKey]: { $all: newArray.slice() } });
+      // } else {
+      //   mongoQuery.push({ [QueryKey]: query[QueryKey] });
+      // }
+      mongoQuery.push({ [QueryKey]: query[QueryKey] });
+    }
+
     // for (var key in mongoQuery) {
     //   console.log(key, mongoQuery[key]);
     //     }
@@ -55,7 +54,7 @@ export class MixtapeService {
     const mixtape: any = [];
 
     await cursor.forEach((doc: any) => {
-      console.log(doc)
+      console.log(doc);
       mixtape.push(doc);
     });
 
@@ -74,32 +73,11 @@ export class MixtapeService {
     return mixtape;
   }
 
-
   async UpdateMixtape(id: string, mixtape: Mixtape): Promise<any> {
-    // console.log(id)
-    // console.log(mixtape)
-    const updatedMixtape = await this.db.replaceOne({ _id: mongo.ObjectID(id)  }, mixtape);
-    // console.log(updatedMixtape)
+    const updatedMixtape = await this.db.replaceOne(
+      { _id: mongo.ObjectID(id) },
+      mixtape
+    );
     return updatedMixtape.ops[0];
   }
-  
-
-  // async FollowUser(
-  //   username: string,
-  //   userToFollowUsername: string,
-  //   follow: boolean
-  // ): Promise<void> {
-  //   const user = await this.GetByUsername(username);
-  //   const userToFollow = await this.GetByUsername(userToFollowUsername);
-
-  //   if (user && userToFollow) {
-  //     follow
-  //       ? User.followUser(user, userToFollow)
-  //       : User.unfollowUser(user, userToFollow);
-  //     await this.UpdateUser(username, user);
-  //     await this.UpdateUser(userToFollowUsername, userToFollow);
-  //   } else {
-  //     throw Error("User not found.");
-  //   }
-  // }
 }

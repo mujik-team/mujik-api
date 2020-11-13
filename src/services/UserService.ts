@@ -44,13 +44,6 @@ export class UserService {
     return updatedUser;
   }
 
-  // async GetUserProfile(username: string): Promise<User | null> {
-  //   const user = await this.GetByUsername(username);
-  //   if (user) {
-  //     return user.profile
-  //   }
-  // }
-
   async UpdateUserProfile(username: string, profile: any) {
     const user = await this.GetByUsername(username);
     if (user) {
