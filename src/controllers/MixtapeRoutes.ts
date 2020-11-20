@@ -4,8 +4,7 @@ import { userService } from "../app";
 import { mixtapeService } from "../app";
 import { Mixtape } from "../model/MixtapeModel";
 import { ResultError, ResultOK } from "../utils/ResultGenerator";
-
-//finished work
+import fs from "fs";
 
 export const MixtapeRoutes: Route[] = [
   /**
@@ -27,6 +26,36 @@ export const MixtapeRoutes: Route[] = [
         } else {
           res.json(ResultError("Mixtape with that id doesn't exist."));
         }
+      },
+    ],
+  },
+
+  /**
+   * Get mixtape cover image.
+   */
+  {
+    path: "/mixtape/:id/cover",
+    method: "get",
+    handler: [
+      // AuthService.isAuthenticated,
+      async (req, res) => {
+        const { id } = req.params;
+        const root = process.env.UPLOAD_DIR || "/var/mujik/uploads/mixtapes/";
+
+        // Check if mixtape cover image exists.
+
+        fs.stat(root + id, (err, stat) => {
+          if (!err) {
+            res.setHeader("Content-Type", "image");
+            res.sendFile(id, {
+              root,
+            });
+          } else {
+            res
+              .status(404)
+              .json(ResultError("Mixtape cover image doesn't exist"));
+          }
+        });
       },
     ],
   },

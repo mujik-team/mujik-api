@@ -3,6 +3,7 @@ import { ResultError, ResultOK } from "../utils/ResultGenerator";
 import { User } from "../model/UserModel";
 import { userService } from "../app";
 import { AuthService } from "../services/AuthService";
+import fs from "fs";
 
 /**
  * 1. post = register a user
@@ -22,7 +23,6 @@ export const UserRoutes: Route[] = [
     handler: [
       AuthService.isAuthenticated,
       async (req, res) => {
-        console.log(req.params);
         const { username } = req.params;
         const user: any = await userService.GetByUsername(username);
 
@@ -35,6 +35,31 @@ export const UserRoutes: Route[] = [
         } else {
           res.json(ResultError("User with that username doesn't exist."));
         }
+      },
+    ],
+  },
+  {
+    path: "/user/:username/avatar",
+    method: "get",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        const { username } = req.params;
+        const root = process.env.UPLOAD_DIR || "/var/mujik/uploads/avatars/";
+
+        // check if avatar exists
+        fs.stat(root + username, (err, stat) => {
+          if (!err) {
+            res.setHeader("Content-Type", "image");
+            res.sendFile(username, {
+              root,
+            });
+          } else {
+            res
+              .status(404)
+              .json(ResultError("User avatar image doesn't exist"));
+          }
+        });
       },
     ],
   },

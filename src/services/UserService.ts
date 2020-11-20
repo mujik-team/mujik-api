@@ -1,5 +1,4 @@
 import { Collection } from "mongodb";
-import { Profile } from "passport";
 import { User } from "../model/UserModel";
 const mongo = require("mongodb");
 

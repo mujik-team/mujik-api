@@ -2,6 +2,7 @@ import { Router } from "express";
 import { AuthRoutes } from "./AuthRoutes";
 import { MixtapeRoutes } from "./MixtapeRoutes";
 import { TournamentRoutes } from "./TournamentRoutes";
+import { UploadRoutes } from "./UploadRoutes";
 import { UserRoutes } from "./UserRoutes";
 import { Route } from "./_types";
 
@@ -10,6 +11,7 @@ const AppRoutes: Route[] = [
   ...UserRoutes,
   ...MixtapeRoutes,
   ...TournamentRoutes,
+  ...UploadRoutes,
 ];
 
 /**
