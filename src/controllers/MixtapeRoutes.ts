@@ -225,4 +225,38 @@ export const MixtapeRoutes: Route[] = [
       },
     ],
   },
+  {
+    path: "/mixtape/:id/follow",
+    method: "post",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res, next) => {
+        const { id } = req.params;
+        const { username, follow } = req.body;
+  
+        try {
+          const mixtape: any = await mixtapeService.GetMixtape(id);
+          const user = await userService.GetByUsername(username);
+
+          if (follow === true) {
+            mixtape.followers = mixtape?.followers + 1;
+            user?.profile.mixtapes.push(id);
+          } else {
+            mixtape.followers = mixtape?.followers > 0 ? mixtape?.followers - 1 : 0;
+            const mixtapeIndex = user?.profile.mixtapes.indexOf(id) as number;
+            if (mixtapeIndex > -1) {
+              user?.profile.mixtapes.splice(mixtapeIndex, 1);
+            }
+          }
+
+          const updatedUser = await userService.UpdateUserProfile(username, user?.profile);
+          const updatedMixtape = await mixtapeService.UpdateMixtape(id, mixtape);
+          
+          res.json(ResultOK(`${username} followed mixtape ${updatedMixtape.mixtapeName}`, { updatedMixtape }));
+        } catch (err) {
+          res.json(ResultError("Error following mixtape"));
+        }
+      }
+    ]
+  }
 ];
