@@ -1,7 +1,7 @@
 import { Route } from "./_types";
 import { AuthService } from "../services/AuthService";
-import { userService } from "../app";
-import { mixtapeService } from "../app";
+import { _UserService } from "../app";
+import { _MixtapeService } from "../app";
 import { Mixtape } from "../model/MixtapeModel";
 import { ResultError, ResultOK } from "../utils/ResultGenerator";
 import fs from "fs";
@@ -18,7 +18,7 @@ export const MixtapeRoutes: Route[] = [
       async (req, res) => {
         console.log(req.params);
         const { id } = req.params;
-        const mixtape: any = await mixtapeService.GetMixtape(id);
+        const mixtape: any = await _MixtapeService.GetMixtape(id);
         if (mixtape) {
           res.json(
             ResultOK(`Retrieved mixtape ${mixtape.mixtapeName}.`, { mixtape })
@@ -97,13 +97,13 @@ export const MixtapeRoutes: Route[] = [
             songs,
             tournamentsWon
           );
-          const newMixtape: any = await mixtapeService.CreateMixtape(mixtape);
+          const newMixtape: any = await _MixtapeService.CreateMixtape(mixtape);
 
           // Add the mixtape to the user
-          const currentUser: any = await userService.GetByUsername(createdBy);
+          const currentUser: any = await _UserService.GetByUsername(createdBy);
           const profile = currentUser.profile;
           profile.mixtapes.push(String(newMixtape._id));
-          const updatedUser = await userService.UpdateUserProfile(
+          const updatedUser = await _UserService.UpdateUserProfile(
             createdBy,
             profile
           );
@@ -132,7 +132,7 @@ export const MixtapeRoutes: Route[] = [
         const mixtape = req.body;
         delete mixtape._id;
 
-        const updatedMixtape = await mixtapeService.UpdateMixtape(id, mixtape);
+        const updatedMixtape = await _MixtapeService.UpdateMixtape(id, mixtape);
 
         if (updatedMixtape) {
           res.json(
@@ -157,20 +157,20 @@ export const MixtapeRoutes: Route[] = [
       AuthService.isAuthenticated,
       async (req, res, next) => {
         const { id } = req.params;
-        const mixtape_deleted: any = await mixtapeService.GetMixtape(id);
+        const mixtape_deleted: any = await _MixtapeService.GetMixtape(id);
         try {
-          const deletedMixtape = await mixtapeService.DeleteMixtape(id);
+          const deletedMixtape = await _MixtapeService.DeleteMixtape(id);
           res.json(ResultOK(`Deleted mixtape ${deletedMixtape}`));
 
           // remove from the user mixtapes
           // Add the mixtape to the user
-          const currentUser: any = await userService.GetByUsername(
+          const currentUser: any = await _UserService.GetByUsername(
             mixtape_deleted.createdBy
           );
           const profile = currentUser.profile;
           const index = profile.mixtapes.indexOf(String(mixtape_deleted._id));
           profile.mixtapes.splice(index, 1);
-          const updatedUser = await userService.UpdateUserProfile(
+          const updatedUser = await _UserService.UpdateUserProfile(
             mixtape_deleted.createdBy,
             profile
           );
@@ -190,7 +190,7 @@ export const MixtapeRoutes: Route[] = [
 
         // Create the advanced query
         // console.log(query);
-        const mixtape: any = await mixtapeService.GetMixtapeByQuery(query);
+        const mixtape: any = await _MixtapeService.GetMixtapeByQuery(query);
         // res.json(ResultOK("Found the query", { mixtape }));
         // For every element in query, it would be like { $and: [ query: params ] }
         if (mixtape) {
@@ -210,7 +210,7 @@ export const MixtapeRoutes: Route[] = [
         const { ids } = req.body;
         try {
           const mixtapes = await ids.map(async (id: string) => {
-            const mixtape: any = await mixtapeService.GetMixtape(id);
+            const mixtape: any = await _MixtapeService.GetMixtape(id);
             // console.log(mixtape);
             return mixtape;
           });
@@ -233,30 +233,42 @@ export const MixtapeRoutes: Route[] = [
       async (req, res, next) => {
         const { id } = req.params;
         const { username, follow } = req.body;
-  
+
         try {
-          const mixtape: any = await mixtapeService.GetMixtape(id);
-          const user = await userService.GetByUsername(username);
+          const mixtape: any = await _MixtapeService.GetMixtape(id);
+          const user = await _UserService.GetByUsername(username);
 
           if (follow === true) {
             mixtape.followers = mixtape?.followers + 1;
             user?.profile.mixtapes.push(id);
           } else {
-            mixtape.followers = mixtape?.followers > 0 ? mixtape?.followers - 1 : 0;
+            mixtape.followers =
+              mixtape?.followers > 0 ? mixtape?.followers - 1 : 0;
             const mixtapeIndex = user?.profile.mixtapes.indexOf(id) as number;
             if (mixtapeIndex > -1) {
               user?.profile.mixtapes.splice(mixtapeIndex, 1);
             }
           }
 
-          const updatedUser = await userService.UpdateUserProfile(username, user?.profile);
-          const updatedMixtape = await mixtapeService.UpdateMixtape(id, mixtape);
-          
-          res.json(ResultOK(`${username} followed mixtape ${updatedMixtape.mixtapeName}`, { updatedMixtape }));
+          const updatedUser = await _UserService.UpdateUserProfile(
+            username,
+            user?.profile
+          );
+          const updatedMixtape = await _MixtapeService.UpdateMixtape(
+            id,
+            mixtape
+          );
+
+          res.json(
+            ResultOK(
+              `${username} followed mixtape ${updatedMixtape.mixtapeName}`,
+              { updatedMixtape }
+            )
+          );
         } catch (err) {
           res.json(ResultError("Error following mixtape"));
         }
-      }
-    ]
-  }
+      },
+    ],
+  },
 ];

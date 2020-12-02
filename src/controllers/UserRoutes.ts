@@ -1,7 +1,7 @@
 import { Route } from "./_types";
 import { ResultError, ResultOK } from "../utils/ResultGenerator";
 import { User } from "../model/UserModel";
-import { userService } from "../app";
+import { _UserService } from "../app";
 import { AuthService } from "../services/AuthService";
 import fs from "fs";
 
@@ -24,7 +24,7 @@ export const UserRoutes: Route[] = [
       AuthService.isAuthenticated,
       async (req, res) => {
         const { username } = req.params;
-        const user: any = await userService.GetByUsername(username);
+        const user: any = await _UserService.GetByUsername(username);
 
         if (user) {
           res.json(
@@ -78,7 +78,7 @@ export const UserRoutes: Route[] = [
         const user: User = new User(username, email, password);
         user.profile.bio = bio || "";
 
-        const newUser: any = await userService.CreateUser(user);
+        const newUser: any = await _UserService.CreateUser(user);
         delete newUser.password; // remove password from result.
 
         // Successfully created new user.
@@ -101,7 +101,7 @@ export const UserRoutes: Route[] = [
     handler: async (req, res) => {
       const { username } = req.params;
       const { user } = req.body;
-      const updatedUser = await userService.UpdateUser(username, user);
+      const updatedUser = await _UserService.UpdateUser(username, user);
 
       if (updatedUser) {
         res.json(
@@ -123,7 +123,7 @@ export const UserRoutes: Route[] = [
       const { id } = req.params;
 
       try {
-        const deletedUser = await userService.DeleteUser(id);
+        const deletedUser = await _UserService.DeleteUser(id);
         res.json(ResultOK(`Deleted user ${deletedUser.username}`));
       } catch (err) {
         res.json(ResultError("Error deleting user"));
@@ -143,7 +143,7 @@ export const UserRoutes: Route[] = [
         const currentUser: any = req.user;
 
         try {
-          await userService.FollowUser(currentUser.username, username, follow);
+          await _UserService.FollowUser(currentUser.username, username, follow);
           res.json(
             ResultOK(`${currentUser.username} followed/unfollowed ${username}`)
           );

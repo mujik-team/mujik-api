@@ -2,7 +2,7 @@ import { AuthService } from "../services/AuthService";
 import { Route } from "./_types";
 import multer from "multer";
 import { ResultOK } from "../utils/ResultGenerator";
-import { mixtapeService } from "../app";
+import { _MixtapeService } from "../app";
 
 const userProfileUpload = multer({
   storage: multer.diskStorage({
@@ -30,7 +30,7 @@ const mixtapeImageUpload = multer({
   fileFilter: async (req, file, callback) => {
     const { id } = req.params as any;
 
-    if (!(await mixtapeService.GetMixtape(id))) {
+    if (!(await _MixtapeService.GetMixtape(id))) {
       return callback(new Error("Mixtape with that id doesn't exist."));
     }
 

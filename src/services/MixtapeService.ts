@@ -1,23 +1,9 @@
-import { db } from "../utils/db";
 import { Mixtape } from "../model/MixtapeModel";
 import { Collection } from "mongodb";
 const mongo = require("mongodb");
 
-// export async function GetMixtape(id: string): Promise<Mixtape> {
-//   const users = db.collection("user");
-//   return { id: "1234", title: "The First One", author: "mckillagorilla" };
-
-//   //starting work
-// }
 export class MixtapeService {
-  constructor(private db: Collection<Mixtape>) {
-    // this.InitUserIndices();
-  }
-
-  async InitUserIndices() {
-    this.db.createIndex({ username: 1 }, { unique: true });
-    this.db.createIndex({ email: 1 }, { unique: true });
-  }
+  constructor(private db: Collection<Mixtape>) {}
 
   async GetMixtape(id: string): Promise<Mixtape | null> {
     const mixtape = await this.db.findOne({ _id: mongo.ObjectID(id) });
@@ -32,24 +18,10 @@ export class MixtapeService {
   async GetMixtapeByQuery(query: any): Promise<any> {
     const mongoQuery = [];
     for (var QueryKey in query) {
-      console.log(QueryKey, query[QueryKey]);
-      // if (Array.isArray(query[QueryKey])) {
-      //   const newArray = [...query[QueryKey]];
-      //   console.log(newArray);
-      //   mongoQuery.push({ [QueryKey]: { $all: newArray.slice() } });
-      // } else {
-      //   mongoQuery.push({ [QueryKey]: query[QueryKey] });
-      // }
       mongoQuery.push({ [QueryKey]: query[QueryKey] });
     }
 
-    // for (var key in mongoQuery) {
-    //   console.log(key, mongoQuery[key]);
-    //     }
-
-    console.log(mongoQuery);
-
-    const cursor = await this.db.find({ $and: mongoQuery });
+    const cursor = this.db.find({ $and: mongoQuery });
 
     const mixtape: any = [];
 

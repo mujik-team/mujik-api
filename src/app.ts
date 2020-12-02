@@ -10,10 +10,12 @@ import { MixtapeService } from "./services/MixtapeService";
 
 import { AuthService } from "./services/AuthService";
 import { setupCors } from "./utils/cors";
+import { TournamentService } from "./services/TournamentService";
 
 export const app = express.default();
-export let userService: UserService;
-export let mixtapeService: MixtapeService;
+export let _UserService: UserService;
+export let _MixtapeService: MixtapeService;
+export let _TournamentService: TournamentService;
 
 // Load environment variables from .env.
 dotenv.config();
@@ -34,8 +36,9 @@ app.use(middleware.errorHandler);
 
 // Connect to DB.
 initDb().then(() => {
-  userService = new UserService(db.collection("user"));
-  mixtapeService = new MixtapeService(db.collection("mixtape"));
+  _UserService = new UserService(db.collection("user"));
+  _MixtapeService = new MixtapeService(db.collection("mixtape"));
+  _TournamentService = new TournamentService(db.collection("tournament"));
 });
 
 // Setup cleanup functions.
