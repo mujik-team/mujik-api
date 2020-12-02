@@ -2,6 +2,8 @@ import { Tournament } from "../model/TournamentModel";
 import { ResultError, ResultOK } from "../utils/ResultGenerator";
 import { _TournamentService } from "../app";
 import { Route } from "./_types";
+import { AuthService } from "../services/AuthService";
+import { User } from "../model/UserModel";
 
 export const TournamentRoutes: Route[] = [
   /**
@@ -33,22 +35,32 @@ export const TournamentRoutes: Route[] = [
   {
     path: "/tournament/",
     method: "post",
-    handler: async (req, res) => {
-      try {
-        const tournament = await _TournamentService.CreateTournament(req.body);
-        if (!tournament) throw Error("No tournament created!");
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        try {
+          const user = req.user as User;
+          const doc = req.body;
+          doc.createdBy = user.username;
 
-        const tournamentDoc = Tournament.ToJSON(tournament);
+          const tournament = await _TournamentService.CreateTournament(
+            req.body,
+            user
+          );
+          if (!tournament) throw Error("No tournament created!");
 
-        res.json(
-          ResultOK("Successfully created new tournament.", {
-            tournament: tournamentDoc,
-          })
-        );
-      } catch (err) {
-        res.json(ResultError("Unable to create tournament."));
-      }
-    },
+          const tournamentDoc = Tournament.ToJSON(tournament);
+
+          res.json(
+            ResultOK("Successfully created new tournament.", {
+              tournament: tournamentDoc,
+            })
+          );
+        } catch (err) {
+          res.json(ResultError("Unable to create tournament."));
+        }
+      },
+    ],
   },
 
   /**

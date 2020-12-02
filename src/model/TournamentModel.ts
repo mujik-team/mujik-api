@@ -2,42 +2,40 @@ import { ObjectId } from "mongodb";
 import { Reward } from "./RewardModel";
 
 export class Tournament {
-  private constructor(
-    // title of the tournament.
-    public Title: string,
-    // id of the user who created the tournament.
-    public CreatedBy: string,
-    // a description of the tournament.
-    public Description: string,
+  // title of the tournament.
+  public Title: string = "Mujik Tournament";
+  // id of the user who created the tournament.
+  public CreatedBy: string = "mujik";
+  // a description of the tournament.
+  public Description: string = "Tournament Description...";
 
-    // How the winner of the tournament is decided.
-    public WinnerBy: "community" | "creator",
-    public SubmissionDate: Date,
-    public VoteDate: Date,
-    // The number of possible winners for this tournament.
-    public NumWinners: number,
-    // Rewards offered by winning the tournament
-    public Rewards: Reward[],
+  // How the winner of the tournament is decided.
+  public WinnerBy: "community" | "creator" = "community";
+  public SubmissionDate: Date = new Date();
+  public VoteDate: Date = new Date();
+  // The number of possible winners for this tournament.
+  public NumWinners: number = 3;
+  // Rewards offered by winning the tournament
+  public Rewards: Reward[] = new Array<Reward>();
 
-    public Restrictions: Restriction[] = new Array<Restriction>(),
-    // Special flags that alter the tournament's behaviour.
-    public Modifiers: TournamentModifiers[] = new Array<TournamentModifiers>(),
-    public Submissions: Submission[] = new Array<Submission>(),
-    public IsActive: boolean = true,
-    public TournamentId?: ObjectId
-  ) {}
+  public Restrictions: Restriction[] = new Array<Restriction>();
+  // Special flags that alter the tournament's behaviour.
+  public Modifiers: TournamentModifiers[] = new Array<TournamentModifiers>();
+  public Submissions: Submission[] = new Array<Submission>();
+  public IsActive: boolean = true;
+  public TournamentId: string = "stub";
 
   static CreateFromJSON(doc: TournamentDTO) {
-    const tournament = new Tournament(
-      doc.title,
-      doc.createdBy,
-      doc.description,
-      doc.winnerBy,
-      doc.submissionDate,
-      doc.voteDate,
-      doc.numWinners,
-      doc.rewards
-    );
+    const tournament = new Tournament();
+
+    tournament.Title = doc.title;
+    tournament.CreatedBy = doc.createdBy;
+    tournament.Description = doc.description;
+    tournament.WinnerBy = doc.winnerBy;
+    tournament.SubmissionDate = doc.submissionDate;
+    tournament.VoteDate = doc.voteDate;
+    tournament.NumWinners = doc.numWinners;
+    tournament.Rewards = doc.rewards;
 
     if (doc.restrictions) tournament.Restrictions = doc.restrictions;
 
@@ -48,45 +46,27 @@ export class Tournament {
 
   static ParseFromJSON(doc: any) {
     try {
-      let {
-        _id,
-        title,
-        createdBy,
-        description,
-        isActive,
-        submissions,
-        restrictions,
-        winnerBy,
-        submissionDate,
-        voteDate,
-        numWinners,
-        rewards,
-        modifiers,
-      } = doc;
+      const tournament = new Tournament();
 
-      if (!submissions) submissions = new Array<Submission>();
+      tournament.TournamentId = doc._id;
+      tournament.Title = doc.title;
+      tournament.CreatedBy = doc.createdBy;
+      tournament.Description = doc.description;
+      tournament.WinnerBy = doc.winnerBy;
+      tournament.SubmissionDate = doc.submissionDate;
+      tournament.VoteDate = doc.voteDate;
+      tournament.NumWinners = doc.numWinners;
+      tournament.Rewards = doc.rewards;
+      tournament.IsActive = doc.isActive;
+      tournament.Submissions = doc.submissions;
+      tournament.Restrictions = doc.restrictions;
+      tournament.Modifiers = doc.modifiers;
 
-      if (!restrictions) restrictions = new Array<Restriction>();
-
-      return new Tournament(
-        title,
-        createdBy,
-        description,
-        winnerBy,
-        submissionDate,
-        voteDate,
-        numWinners,
-        rewards,
-        restrictions,
-        modifiers,
-        submissions,
-        isActive,
-        new ObjectId(_id)
-      );
+      return tournament;
     } catch (err) {
       console.log("Unable to parse doc to create new tournament.");
       console.error(err);
-      return null;
+      return undefined;
     }
   }
 

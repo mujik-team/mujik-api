@@ -38,7 +38,10 @@ app.use(middleware.errorHandler);
 initDb().then(() => {
   _UserService = new UserService(db.collection("user"));
   _MixtapeService = new MixtapeService(db.collection("mixtape"));
-  _TournamentService = new TournamentService(db.collection("tournament"));
+  _TournamentService = new TournamentService(
+    db.collection("tournament"),
+    _UserService
+  );
 });
 
 // Setup cleanup functions.
