@@ -1,4 +1,4 @@
-import { userService } from "../app";
+import { _UserService } from "../app";
 
 export class User {
   constructor(
@@ -25,8 +25,8 @@ export class User {
     userToFollow.profile.totalFollowers += 1;
     currentUser.profile.totalFollowing += 1;
 
-    userService.UpdateUser(currentUser.username, currentUser);
-    userService.UpdateUser(userToFollow.username, userToFollow);
+    _UserService.UpdateUser(currentUser.username, currentUser);
+    _UserService.UpdateUser(userToFollow.username, userToFollow);
     return true;
   }
 
@@ -45,8 +45,8 @@ export class User {
     currentUser.profile.totalFollowing -= 1;
     userToUnfollow.profile.totalFollowers -= 1;
 
-    userService.UpdateUser(currentUser.username, currentUser);
-    userService.UpdateUser(userToUnfollow.username, userToUnfollow);
+    _UserService.UpdateUser(currentUser.username, currentUser);
+    _UserService.UpdateUser(userToUnfollow.username, userToUnfollow);
 
     return true;
   }

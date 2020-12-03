@@ -1,3 +1,6 @@
+import { Tournament } from "../model/TournamentModel";
+import { ResultError, ResultOK } from "../utils/ResultGenerator";
+import { _TournamentService } from "../app";
 import { Route } from "./_types";
 
 export const TournamentRoutes: Route[] = [
@@ -7,8 +10,20 @@ export const TournamentRoutes: Route[] = [
   {
     path: "/tournament/:id",
     method: "get",
-    handler: (req, res) => {
-      throw new Error("Not yet implemented.");
+    handler: async (req, res) => {
+      const { id } = req.params;
+
+      try {
+        const tournament = await _TournamentService.GetTournament(id);
+
+        if (!tournament) throw Error("Tournament not found!");
+
+        res.json(
+          ResultOK("Successfully retrieved tournament.", { tournament })
+        );
+      } catch (err) {
+        res.json(ResultError("Unable to retrieve tournament with ID: ", id));
+      }
     },
   },
 
@@ -18,8 +33,21 @@ export const TournamentRoutes: Route[] = [
   {
     path: "/tournament/",
     method: "post",
-    handler: (req, res) => {
-      throw new Error("Not yet implemented.");
+    handler: async (req, res) => {
+      try {
+        const tournament = await _TournamentService.CreateTournament(req.body);
+        if (!tournament) throw Error("No tournament created!");
+
+        const tournamentDoc = Tournament.ToJSON(tournament);
+
+        res.json(
+          ResultOK("Successfully created new tournament.", {
+            tournament: tournamentDoc,
+          })
+        );
+      } catch (err) {
+        res.json(ResultError("Unable to create tournament."));
+      }
     },
   },
 
@@ -29,8 +57,25 @@ export const TournamentRoutes: Route[] = [
   {
     path: "/tournament/:id",
     method: "put",
-    handler: (req, res) => {
-      throw new Error("Not yet implemented.");
+    handler: async (req, res) => {
+      const { id } = req.params;
+
+      try {
+        const updatedTournament = await _TournamentService.UpdateTournament(
+          id,
+          req.body
+        );
+
+        if (!updatedTournament) throw Error("Unable to update tournament");
+
+        res.json(
+          ResultOK("Successfully updated tournament.", {
+            tournament: updatedTournament,
+          })
+        );
+      } catch (err) {
+        res.json(ResultError("Unable to update tournament details."));
+      }
     },
   },
 
@@ -40,8 +85,18 @@ export const TournamentRoutes: Route[] = [
   {
     path: "/tournament/:id",
     method: "delete",
-    handler: (req, res) => {
-      throw new Error("Not yet implemented.");
+    handler: async (req, res) => {
+      const { id } = req.params;
+
+      try {
+        const deleted = await _TournamentService.DeleteTournament(id);
+
+        if (!deleted) throw Error("Tournament not found!");
+
+        res.json(ResultOK("Successfully deleted tournament."));
+      } catch (err) {
+        res.json(ResultError("Unable to delete tournament with ID: ", id));
+      }
     },
   },
 ];

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import passport from "passport";
-import { userService } from "../app";
+import { _UserService } from "../app";
 
 import session from "express-session";
 
@@ -22,7 +22,7 @@ export class AuthService {
 
     passport.use(
       new Local.Strategy(async (username, password, done) => {
-        const user = await userService.GetByUsername(username);
+        const user = await _UserService.GetByUsername(username);
         if (!user || user.password !== password) {
           return done(null, false, { message: "Invalid credentials." });
         }
@@ -36,7 +36,7 @@ export class AuthService {
     });
 
     passport.deserializeUser(async (username: string, done) => {
-      const user = await userService.GetByUsername(username);
+      const user = await _UserService.GetByUsername(username);
       return done(null, user);
     });
   }
@@ -44,6 +44,5 @@ export class AuthService {
   static isAuthenticated(req: Request, res: Response, next: NextFunction) {
     if (req.isAuthenticated()) return next();
     else res.json(ResultError("User is not authenticated."));
-
   }
 }

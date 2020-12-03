@@ -1,5 +1,5 @@
 import passport from "passport";
-import { userService } from "../app";
+import { _UserService } from "../app";
 import { ResultOK, ResultWarning } from "../utils/ResultGenerator";
 import { Route } from "./_types";
 
@@ -11,19 +11,18 @@ export const AuthRoutes: Route[] = [
       passport.authenticate("local", { session: true }),
       async (req, res) => {
         const { username } = req.body;
-        const user = await userService.GetByUsername(username);
+        const user = await _UserService.GetByUsername(username);
         res.json(ResultOK(`Welcome ${username}.`, { user }));
       },
     ],
   },
   {
-
     path: "/reset",
     method: "post",
     handler: async (req, res) => {
       const { resetCode, newPassword, username } = req.body;
 
-      const user = await userService.GetByUsername(username);
+      const user = await _UserService.GetByUsername(username);
 
       if (user) {
         if (resetCode === "abracadabra") {
@@ -33,7 +32,7 @@ export const AuthRoutes: Route[] = [
           }
 
           user.password = newPassword;
-          await userService.UpdateUser(username, user);
+          await _UserService.UpdateUser(username, user);
           res.json(ResultOK("Successfully reset credentials."));
         } else {
           res.json(ResultWarning("Incorrect reset code."));
