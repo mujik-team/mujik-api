@@ -77,4 +77,5 @@ class Profile {
 
   tournamentsJoined = new Array<string>();
   tournamentsCreated = new Array<string>();
+  tournamentsFollowing = new Array<string>();
 }

@@ -75,7 +75,7 @@ export const TournamentRoutes: Route[] = [
       try {
         const updatedTournament = await _TournamentService.UpdateTournament(
           id,
-          req.body
+          req.body.tournament
         );
 
         if (!updatedTournament) throw Error("Unable to update tournament");
@@ -99,9 +99,13 @@ export const TournamentRoutes: Route[] = [
     method: "delete",
     handler: async (req, res) => {
       const { id } = req.params;
+      const user = req.user as User;
 
       try {
-        const deleted = await _TournamentService.DeleteTournament(id);
+        const deleted = await _TournamentService.DeleteTournament(
+          id,
+          user.username
+        );
 
         if (!deleted) throw Error("Tournament not found!");
 
@@ -110,5 +114,29 @@ export const TournamentRoutes: Route[] = [
         res.json(ResultError("Unable to delete tournament with ID: ", id));
       }
     },
+  },
+
+  /**
+   * Follow a tournament.
+   */
+  {
+    path: "/tournament/:id/follow",
+    method: "post",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        const { id } = req.params;
+        const user = req.user as User;
+        const toFollow = req.query.toFollow === "true";
+
+        try {
+          await _TournamentService.FollowTournament(
+            id,
+            user.username,
+            toFollow
+          );
+        } catch (err) {}
+      },
+    ],
   },
 ];
