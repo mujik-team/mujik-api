@@ -17,9 +17,9 @@ export class UserService {
     return user;
   }
 
-  async GetByUsername(username: string): Promise<User | null> {
+  async GetByUsername(username: string): Promise<User | undefined> {
     const user = await this.db.findOne({ username: username });
-    return user;
+    return user || undefined;
   }
 
   async CreateUser(user: User): Promise<User> {

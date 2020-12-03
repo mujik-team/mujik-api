@@ -1,110 +1,92 @@
-import { ObjectId } from "mongodb";
 import { Reward } from "./RewardModel";
 
 export class Tournament {
-  private constructor(
-    // title of the tournament.
-    public Title: string,
-    // id of the user who created the tournament.
-    public CreatedBy: string,
-    // a description of the tournament.
-    public Description: string,
+  // title of the tournament.
+  public Title: string = "Mujik Tournament";
+  // id of the user who created the tournament.
+  public CreatedBy: string = "mujik";
+  // a description of the tournament.
+  public Description: string = "Tournament Description...";
 
-    // How the winner of the tournament is decided.
-    public WinnerBy: "community" | "creator",
-    public SubmissionDate: Date,
-    public VoteDate: Date,
-    // The number of possible winners for this tournament.
-    public NumWinners: number,
-    // Rewards offered by winning the tournament
-    public Rewards: Reward[],
+  // How the winner of the tournament is decided.
+  public WinnerBy: "community" | "creator" = "community";
+  public SubmissionDate: Date = new Date();
+  public VoteDate: Date = new Date();
+  // The number of possible winners for this tournament.
+  public NumWinners: number = 3;
+  // Rewards offered by winning the tournament
+  public Rewards: Reward[] = new Array<Reward>();
 
-    public Restrictions: Restriction[] = new Array<Restriction>(),
-    // Special flags that alter the tournament's behaviour.
-    public Modifiers: TournamentModifiers[] = new Array<TournamentModifiers>(),
-    public Submissions: Submission[] = new Array<Submission>(),
-    public IsActive: boolean = true,
-    public TournamentId?: ObjectId
-  ) {}
+  public Restrictions: Restriction[] = new Array<Restriction>();
+  // Special flags that alter the tournament's behaviour.
+  public Modifiers: TournamentModifiers[] = new Array<TournamentModifiers>();
+  public Submissions: Submission[] = new Array<Submission>();
+  public IsActive: boolean = true;
+  public TournamentId: string = "stub";
 
   static CreateFromJSON(doc: TournamentDTO) {
-    const tournament = new Tournament(
-      doc.title,
-      doc.createdBy,
-      doc.description,
-      doc.winnerBy,
-      doc.submissionDate,
-      doc.voteDate,
-      doc.numWinners,
-      doc.rewards
-    );
+    const tournament = new Tournament();
 
-    if (doc.restrictions) tournament.Restrictions = doc.restrictions;
+    tournament.Title = doc.Title;
+    tournament.CreatedBy = doc.CreatedBy;
+    tournament.Description = doc.Description;
+    tournament.WinnerBy = doc.WinnerBy;
+    tournament.SubmissionDate = doc.SubmissionDate;
+    tournament.VoteDate = doc.VoteDate;
+    tournament.NumWinners = doc.NumWinners;
+    tournament.Rewards = doc.Rewards.map((r) => Reward.ParseFromJSON(r));
 
-    if (doc.modifiers) tournament.Modifiers = doc.modifiers;
+    if (doc.Restrictions)
+      tournament.Restrictions = doc.Restrictions.map((r) =>
+        Restriction.ParseFromJSON(r)
+      );
+
+    if (doc.Modifiers) tournament.Modifiers = doc.Modifiers;
 
     return tournament;
   }
 
   static ParseFromJSON(doc: any) {
     try {
-      let {
-        _id,
-        title,
-        createdBy,
-        description,
-        isActive,
-        submissions,
-        restrictions,
-        winnerBy,
-        submissionDate,
-        voteDate,
-        numWinners,
-        rewards,
-        modifiers,
-      } = doc;
+      const tournament = new Tournament();
 
-      if (!submissions) submissions = new Array<Submission>();
+      tournament.TournamentId = doc._id;
+      tournament.Title = doc.Title;
+      tournament.CreatedBy = doc.CreatedBy;
+      tournament.Description = doc.Description;
+      tournament.WinnerBy = doc.WinnerBy;
+      tournament.SubmissionDate = doc.SubmissionDate;
+      tournament.VoteDate = doc.VoteDate;
+      tournament.NumWinners = doc.NumWinners;
+      tournament.Rewards = doc.Rewards;
+      tournament.IsActive = doc.IsActive;
+      tournament.Submissions = doc.Submissions;
+      tournament.Restrictions = doc.Restrictions;
+      tournament.Modifiers = doc.Modifiers;
 
-      if (!restrictions) restrictions = new Array<Restriction>();
-
-      return new Tournament(
-        title,
-        createdBy,
-        description,
-        winnerBy,
-        submissionDate,
-        voteDate,
-        numWinners,
-        rewards,
-        restrictions,
-        modifiers,
-        submissions,
-        isActive,
-        new ObjectId(_id)
-      );
+      return tournament;
     } catch (err) {
       console.log("Unable to parse doc to create new tournament.");
       console.error(err);
-      return null;
+      return undefined;
     }
   }
 
   static ToJSON(tournament: Tournament) {
     return {
       _id: tournament.TournamentId,
-      title: tournament.Title,
-      createdBy: tournament.CreatedBy,
-      description: tournament.Description,
-      isActive: tournament.IsActive,
-      submissions: tournament.Submissions,
-      restrictions: tournament.Restrictions,
-      modifiers: tournament.Modifiers,
-      winnerBy: tournament.WinnerBy,
-      submissionDate: tournament.SubmissionDate,
-      voteDate: tournament.VoteDate,
-      numWinners: tournament.NumWinners,
-      rewards: tournament.Rewards,
+      Title: tournament.Title,
+      CreatedBy: tournament.CreatedBy,
+      Description: tournament.Description,
+      IsActive: tournament.IsActive,
+      Submissions: tournament.Submissions,
+      Restrictions: tournament.Restrictions,
+      Modifiers: tournament.Modifiers,
+      WinnerBy: tournament.WinnerBy,
+      SubmissionDate: tournament.SubmissionDate,
+      VoteDate: tournament.VoteDate,
+      NumWinners: tournament.NumWinners,
+      Rewards: tournament.Rewards,
     };
   }
 }
@@ -114,8 +96,8 @@ class Submission {
 
   static ToJSON(submission: Submission) {
     return {
-      id: submission.MixtapeId,
-      votes: submission.NumVotes,
+      Id: submission.MixtapeId,
+      Votes: submission.NumVotes,
     };
   }
 }
@@ -123,10 +105,14 @@ class Submission {
 class Restriction {
   constructor(public Type: string, public Value: string | boolean | number) {}
 
+  static ParseFromJSON(doc: any) {
+    return new Restriction(doc.Type, doc.Value);
+  }
+
   static ToJSON(restriction: Restriction) {
     return {
-      type: restriction.Type,
-      value: restriction.Value,
+      Type: restriction.Type,
+      Value: restriction.Value,
     };
   }
 }
@@ -137,14 +123,14 @@ enum TournamentModifiers {
 }
 
 export type TournamentDTO = {
-  title: string;
-  createdBy: string;
-  description: string;
-  restrictions: Restriction[];
-  modifiers: TournamentModifiers[];
-  winnerBy: "community" | "creator";
-  submissionDate: Date;
-  voteDate: Date;
-  numWinners: number;
-  rewards: Reward[];
+  Title: string;
+  CreatedBy: string;
+  Description: string;
+  Restrictions: Restriction[];
+  Modifiers: TournamentModifiers[];
+  WinnerBy: "community" | "creator";
+  SubmissionDate: Date;
+  VoteDate: Date;
+  NumWinners: number;
+  Rewards: Reward[];
 };
