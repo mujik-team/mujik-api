@@ -1,14 +1,20 @@
 import { Collection, MongoClient } from "mongodb";
-import { Tournament, TournamentDTO } from "../model/TournamentModel";
+import {
+  Tournament,
+  Submission,
+  TournamentDTO,
+} from "../model/TournamentModel";
 import { ObjectID } from "mongodb";
 import { User } from "../model/UserModel";
 import { UserService } from "./UserService";
 import { RewardType } from "../model/RewardModel";
+import { MixtapeService } from "./MixtapeService";
 
 export class TournamentService {
   constructor(
     private db: Collection<Tournament>,
-    private _UserService: UserService
+    private _UserService: UserService,
+    private _MixtapeService: MixtapeService
   ) {}
 
   InitTournamentIndicies() {
@@ -105,7 +111,10 @@ export class TournamentService {
 
     if (user && tournament) {
       if (follow) {
-        user.profile.tournamentsFollowing.push(tournament.TournamentId);
+        // Check if already follow. If so, just return.
+        if (user.profile.tournamentsFollowing.includes(tournamentId)) return;
+
+        user.profile.tournamentsFollowing.push(tournamentId);
         this._UserService.UpdateUser(user.username, user);
       } else {
         user.profile.tournamentsFollowing = user.profile.tournamentsFollowing.filter(
@@ -116,5 +125,81 @@ export class TournamentService {
     } else {
       throw Error("Tournament with that ID doesn't exist.");
     }
+  }
+
+  async MakeSubmission(
+    tournamentId: string,
+    username: string,
+    mixtapeId: string
+  ) {
+    const tournament = await this.GetTournament(tournamentId);
+    const user = await this._UserService.GetByUsername(username);
+    const mixtape = await this._MixtapeService.GetMixtape(mixtapeId);
+
+    // Check if tournament exists.
+    if (!tournament) throw Error("Tournament with that ID doesn't exist.");
+
+    // Check if user exists.
+    if (!user) throw Error("User with that ID doesn't exist.");
+
+    // Check if mixtape exists.
+    if (!mixtape) throw Error("Mixtape with that ID doesn't exist");
+
+    const dateNow = new Date();
+
+    // Check if tournament is in submission mode.
+    if (dateNow > tournament.SubmissionDate)
+      throw Error("Unable to submit. Tournament is not in submission state.");
+
+    // Check if user has already entered the tournament.
+    if (tournament.Entrants.has(user.username))
+      throw Error("User has already made an entry in this tournament.");
+
+    // Check if the mixtape is private.
+    if (mixtape.isPrivate) throw Error("This mixtape is private.");
+
+    // @TODO Check if mixtape meets restrictions...
+    tournament.Submissions.set(mixtapeId, new Submission(mixtapeId));
+    user.profile.tournamentsJoined.push(tournamentId);
+
+    await this.UpdateTournament(tournamentId, tournament);
+    await this._UserService.UpdateUser(username, user);
+  }
+
+  async VoteForMixtape(
+    tournamentId: string,
+    username: string,
+    mixtapeId: string
+  ) {
+    const tournament = await this.GetTournament(tournamentId);
+    const user = await this._UserService.GetByUsername(username);
+    const mixtape = await this._MixtapeService.GetMixtape(mixtapeId);
+    // Check if tournament exists.
+    if (!tournament) throw Error("Tournament with that ID doesn't exist.");
+
+    // Check if user exists.
+    if (!user) throw Error("User with that ID doesn't exist.");
+
+    // Check if mixtape exists.
+    if (!mixtape) throw Error("Mixtape with that ID doesn't exist");
+
+    // Check if mixtape was submitted to tournament.
+    const submission = tournament.Submissions.get(mixtapeId);
+    if (!submission)
+      throw Error("Mixtape with that ID was not submitted to this tournament.");
+
+    const dateNow = new Date();
+
+    if (!(dateNow > tournament.SubmissionDate && dateNow < tournament.VoteDate))
+      throw Error("Unable to vote. Tournament is not in voting state.");
+
+    // Add vote to submission.
+    submission.NumVotes += 1;
+
+    // Save.
+    await this.UpdateTournament(tournamentId, tournament);
+
+    // Add Tournament to user's following.
+    await this.FollowTournament(tournamentId, username, true);
   }
 }

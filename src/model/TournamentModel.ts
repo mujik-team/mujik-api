@@ -17,10 +17,11 @@ export class Tournament {
   // Rewards offered by winning the tournament
   public Rewards: Reward[] = new Array<Reward>();
 
+  public Entrants = new Map<string, string>();
   public Restrictions: Restriction[] = new Array<Restriction>();
   // Special flags that alter the tournament's behaviour.
   public Modifiers: TournamentModifiers[] = new Array<TournamentModifiers>();
-  public Submissions: Submission[] = new Array<Submission>();
+  public Submissions = new Map<string, Submission>();
   public IsActive: boolean = true;
   public TournamentId: string = "stub";
 
@@ -63,6 +64,7 @@ export class Tournament {
       tournament.Submissions = doc.Submissions;
       tournament.Restrictions = doc.Restrictions;
       tournament.Modifiers = doc.Modifiers;
+      tournament.Entrants = doc.Entrants;
 
       return tournament;
     } catch (err) {
@@ -80,6 +82,7 @@ export class Tournament {
       Description: tournament.Description,
       IsActive: tournament.IsActive,
       Submissions: tournament.Submissions,
+      Entrants: tournament.Entrants,
       Restrictions: tournament.Restrictions,
       Modifiers: tournament.Modifiers,
       WinnerBy: tournament.WinnerBy,
@@ -91,7 +94,7 @@ export class Tournament {
   }
 }
 
-class Submission {
+export class Submission {
   constructor(public MixtapeId: string, public NumVotes: number = 0) {}
 
   static ToJSON(submission: Submission) {
@@ -102,7 +105,7 @@ class Submission {
   }
 }
 
-class Restriction {
+export class Restriction {
   constructor(public Type: string, public Value: string | boolean | number) {}
 
   static ParseFromJSON(doc: any) {
@@ -120,6 +123,12 @@ class Restriction {
 enum TournamentModifiers {
   DOUBLE_XP = "double_xp",
   DOUBLE_COINS = "double_coins",
+}
+
+enum TournamentState {
+  SUBMISSION = "SUBMISSION",
+  VOTING = "VOTING",
+  ENDED = "ENDED",
 }
 
 export type TournamentDTO = {
