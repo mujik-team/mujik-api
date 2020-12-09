@@ -21,6 +21,14 @@ export class TournamentService {
     this.db.createIndex({ isActive: 1, createdBy: 1 });
   }
 
+  async GetTournamentQuery(): Promise<Tournament[]> {
+    const docs = await this.db.find().toArray();
+
+    return docs.map((doc: any) =>
+      Tournament.ParseFromJSON(doc)
+    ) as Tournament[];
+  }
+
   async GetTournament(id: string): Promise<Tournament | undefined> {
     const doc = await this.db.findOne({ _id: new ObjectID(id) });
 

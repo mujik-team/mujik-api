@@ -6,6 +6,22 @@ import { AuthService } from "../services/AuthService";
 import { User } from "../model/UserModel";
 
 export const TournamentRoutes: Route[] = [
+  {
+    path: "/tournament",
+    method: "get",
+    handler: async (req, res) => {
+      try {
+        const results = await _TournamentService.GetTournamentQuery();
+        res.json(
+          ResultOK("Successfully retrieved all tournaments.", {
+            tournaments: results,
+          })
+        );
+      } catch (err) {
+        res.json(ResultError("An error occurred."));
+      }
+    },
+  },
   /**
    * Get a tournament by ID.
    */
@@ -57,6 +73,7 @@ export const TournamentRoutes: Route[] = [
             })
           );
         } catch (err) {
+          console.log(err);
           res.json(ResultError("Unable to create tournament."));
         }
       },
