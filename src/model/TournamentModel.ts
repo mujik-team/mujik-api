@@ -38,6 +38,11 @@ export class Tournament {
     tournament.NumWinners = doc.NumWinners;
     tournament.Rewards = doc.Rewards.map((r) => Reward.ParseFromJSON(r));
 
+    if (doc.Restrictions)
+      tournament.Restrictions = doc.Restrictions.map(
+        (r) => new Restriction(r.Type, r.Value)
+      );
+
     if (doc.Modifiers) tournament.Modifiers = doc.Modifiers;
 
     return tournament;
