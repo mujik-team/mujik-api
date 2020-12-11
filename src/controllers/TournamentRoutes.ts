@@ -128,12 +128,15 @@ export const TournamentRoutes: Route[] = [
 
         if (!updatedTournament) throw Error("Unable to update tournament");
 
+        const json = Tournament.ToJSON(updatedTournament);
+
         res.json(
           ResultOK("Successfully updated tournament.", {
-            tournament: updatedTournament,
+            tournament: json,
           })
         );
       } catch (err) {
+        console.log(err);
         res.json(ResultError("Unable to update tournament details."));
       }
     },

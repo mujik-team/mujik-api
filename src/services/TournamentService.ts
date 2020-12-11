@@ -93,6 +93,8 @@ export class TournamentService {
 
     const toUpdateDoc = Tournament.ToJSON(tournamentToUpdate);
 
+    delete (userDoc as any)["_id"];
+
     // Use the spread operator to create a union of the two docs.
     // With preference given to the updated doc.
     const unionDoc: any = {
