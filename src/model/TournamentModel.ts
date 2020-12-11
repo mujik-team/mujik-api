@@ -17,10 +17,12 @@ export class Tournament {
   // Rewards offered by winning the tournament
   public Rewards: Reward[] = new Array<Reward>();
 
+  public Entrants = new Map<string, string>();
+  public Voters = new Map<string, any>();
   public Restrictions: Restriction[] = new Array<Restriction>();
   // Special flags that alter the tournament's behaviour.
   public Modifiers: TournamentModifiers[] = new Array<TournamentModifiers>();
-  public Submissions: Submission[] = new Array<Submission>();
+  public Submissions = new Map<string, Submission>();
   public IsActive: boolean = true;
   public TournamentId: string = "stub";
 
@@ -35,11 +37,6 @@ export class Tournament {
     tournament.VoteDate = doc.VoteDate;
     tournament.NumWinners = doc.NumWinners;
     tournament.Rewards = doc.Rewards.map((r) => Reward.ParseFromJSON(r));
-
-    if (doc.Restrictions)
-      tournament.Restrictions = doc.Restrictions.map((r) =>
-        Restriction.ParseFromJSON(r)
-      );
 
     if (doc.Modifiers) tournament.Modifiers = doc.Modifiers;
 
@@ -60,9 +57,26 @@ export class Tournament {
       tournament.NumWinners = doc.NumWinners;
       tournament.Rewards = doc.Rewards;
       tournament.IsActive = doc.IsActive;
-      tournament.Submissions = doc.Submissions;
       tournament.Restrictions = doc.Restrictions;
       tournament.Modifiers = doc.Modifiers;
+
+      tournament.Submissions = doc.Submissions
+        ? new Map(
+            Object.keys(doc.Submissions)?.map((key) => [
+              key,
+              doc.Submissions[key],
+            ])
+          )
+        : new Map();
+      tournament.Entrants = doc.Entrants
+        ? new Map(
+            Object.keys(doc.Entrants)?.map((key) => [key, doc.Entrants[key]])
+          )
+        : new Map();
+
+      tournament.Voters = doc.Voters
+        ? new Map(Object.keys(doc.Voters)?.map((key) => [key, doc.Voters[key]]))
+        : new Map();
 
       return tournament;
     } catch (err) {
@@ -73,13 +87,31 @@ export class Tournament {
   }
 
   static ToJSON(tournament: Tournament) {
-    return {
+    const Submissions: any = {};
+    const Entrants: any = {};
+    const Voters: any = {};
+
+    tournament.Submissions.forEach((v, k) => {
+      Submissions[k] = v;
+    });
+
+    tournament.Entrants.forEach((v, k) => {
+      Entrants[k] = v;
+    });
+
+    tournament.Voters.forEach((v, k) => {
+      Voters[k] = v;
+    });
+
+    const json = {
       _id: tournament.TournamentId,
       Title: tournament.Title,
       CreatedBy: tournament.CreatedBy,
       Description: tournament.Description,
       IsActive: tournament.IsActive,
-      Submissions: tournament.Submissions,
+      Submissions,
+      Entrants,
+      Voters,
       Restrictions: tournament.Restrictions,
       Modifiers: tournament.Modifiers,
       WinnerBy: tournament.WinnerBy,
@@ -88,38 +120,28 @@ export class Tournament {
       NumWinners: tournament.NumWinners,
       Rewards: tournament.Rewards,
     };
+
+    return json;
   }
 }
 
-class Submission {
+export class Submission {
   constructor(public MixtapeId: string, public NumVotes: number = 0) {}
-
-  static ToJSON(submission: Submission) {
-    return {
-      Id: submission.MixtapeId,
-      Votes: submission.NumVotes,
-    };
-  }
 }
 
-class Restriction {
+export class Restriction {
   constructor(public Type: string, public Value: string | boolean | number) {}
-
-  static ParseFromJSON(doc: any) {
-    return new Restriction(doc.Type, doc.Value);
-  }
-
-  static ToJSON(restriction: Restriction) {
-    return {
-      Type: restriction.Type,
-      Value: restriction.Value,
-    };
-  }
 }
 
 enum TournamentModifiers {
   DOUBLE_XP = "double_xp",
   DOUBLE_COINS = "double_coins",
+}
+
+enum TournamentState {
+  SUBMISSION = "SUBMISSION",
+  VOTING = "VOTING",
+  ENDED = "ENDED",
 }
 
 export type TournamentDTO = {

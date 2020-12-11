@@ -40,9 +40,9 @@ initDb().then(() => {
   _MixtapeService = new MixtapeService(db.collection("mixtape"));
   _TournamentService = new TournamentService(
     db.collection("tournament"),
-    _UserService
+    _UserService,
+    _MixtapeService
   );
-
 });
 
 // Setup cleanup functions.

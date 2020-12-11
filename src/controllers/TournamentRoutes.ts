@@ -1,11 +1,31 @@
 import { Tournament } from "../model/TournamentModel";
-import { ResultError, ResultOK } from "../utils/ResultGenerator";
+import { ResultError, ResultOK, ResultWarning } from "../utils/ResultGenerator";
 import { _TournamentService } from "../app";
 import { Route } from "./_types";
 import { AuthService } from "../services/AuthService";
 import { User } from "../model/UserModel";
+import fs from "fs";
 
 export const TournamentRoutes: Route[] = [
+  {
+    path: "/tournament",
+    method: "get",
+    handler: async (req, res) => {
+      try {
+        const results = await _TournamentService.GetTournamentQuery();
+
+        const tournaments = results.map((t) => Tournament.ToJSON(t));
+
+        res.json(
+          ResultOK("Successfully retrieved all tournaments.", {
+            tournaments,
+          })
+        );
+      } catch (err) {
+        res.json(ResultError("An error occurred."));
+      }
+    },
+  },
   /**
    * Get a tournament by ID.
    */
@@ -17,16 +37,43 @@ export const TournamentRoutes: Route[] = [
 
       try {
         const tournament = await _TournamentService.GetTournament(id);
+        const json = Tournament.ToJSON(tournament!);
 
         if (!tournament) throw Error("Tournament not found!");
 
         res.json(
-          ResultOK("Successfully retrieved tournament.", { tournament })
+          ResultOK("Successfully retrieved tournament.", { tournament: json })
         );
       } catch (err) {
         res.json(ResultError("Unable to retrieve tournament with ID: ", id));
       }
     },
+  },
+
+  /**
+   * Get tournament cover image.
+   */
+  {
+    path: "/tournament/:id/cover",
+    method: "get",
+    handler: [
+      async (req, res) => {
+        const { id } = req.params;
+        const root =
+          process.env.UPLOAD_DIR || "/var/mujik/uploads/tournaments/";
+
+        fs.stat(root + id, (err, stat) => {
+          if (!err) {
+            res.setHeader("Content-Type", "image");
+            res.sendFile(id, { root });
+          } else {
+            res
+              .status(404)
+              .json(ResultWarning("Tournament cover image doesn't exist."));
+          }
+        });
+      },
+    ],
   },
 
   /**
@@ -57,6 +104,7 @@ export const TournamentRoutes: Route[] = [
             })
           );
         } catch (err) {
+          console.log(err);
           res.json(ResultError("Unable to create tournament."));
         }
       },
@@ -136,6 +184,63 @@ export const TournamentRoutes: Route[] = [
             toFollow
           );
         } catch (err) {}
+      },
+    ],
+  },
+
+  /**
+   * Make submission to tournament.
+   */
+  {
+    path: "/tournament/:id/enter",
+    method: "post",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        const { mixtapeId } = req.body;
+
+        const username = (req.user as User).username;
+        const { id } = req.params;
+
+        try {
+          const result = await _TournamentService.MakeSubmission(
+            id,
+            username,
+            mixtapeId
+          );
+          res.json(ResultOK("Successfully entered the tournament."));
+        } catch (err) {
+          console.log(err);
+          res.status(400).json(ResultWarning("Unable to make submission."));
+        }
+      },
+    ],
+  },
+
+  /**
+   * Vote for mixtape in tournament.
+   */
+  {
+    path: "/tournament/:id/vote",
+    method: "post",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        const { mixtapeId } = req.body;
+        const { id } = req.params;
+        const username = (req.user as User).username;
+
+        try {
+          const result = await _TournamentService.VoteForMixtape(
+            id,
+            username,
+            mixtapeId
+          );
+          res.json(ResultOK("Successfully voted for mixtape!"));
+        } catch (err) {
+          console.log(err);
+          res.status(400).json(ResultWarning("Unable to vote for mixtape."));
+        }
       },
     ],
   },
