@@ -168,6 +168,8 @@ export class TournamentService {
 
     // @TODO Check if mixtape meets restrictions...
     tournament.Submissions.set(mixtapeId, new Submission(mixtapeId));
+    tournament.Entrants.set(user.username, "");
+
     user.profile.tournamentsJoined.push(tournamentId);
 
     await this.UpdateTournament(tournamentId, tournament);
@@ -203,6 +205,15 @@ export class TournamentService {
 
     // Add vote to submission.
     submission.NumVotes += 1;
+
+    if (tournament.Voters.has(username)) {
+      let voteData = tournament.Voters.get(username);
+      const date = new Date();
+      const voteId = `${mixtapeId}-${date.toString()}`;
+
+      voteData = { ...voteData, [voteId]: mixtapeId };
+      tournament.Voters.set(username, voteData);
+    }
 
     // Save.
     await this.UpdateTournament(tournamentId, tournament);

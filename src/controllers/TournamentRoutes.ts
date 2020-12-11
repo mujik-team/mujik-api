@@ -13,9 +13,12 @@ export const TournamentRoutes: Route[] = [
     handler: async (req, res) => {
       try {
         const results = await _TournamentService.GetTournamentQuery();
+
+        const tournaments = results.map((t) => Tournament.ToJSON(t));
+
         res.json(
           ResultOK("Successfully retrieved all tournaments.", {
-            tournaments: results,
+            tournaments,
           })
         );
       } catch (err) {
@@ -34,11 +37,12 @@ export const TournamentRoutes: Route[] = [
 
       try {
         const tournament = await _TournamentService.GetTournament(id);
+        const json = Tournament.ToJSON(tournament!);
 
         if (!tournament) throw Error("Tournament not found!");
 
         res.json(
-          ResultOK("Successfully retrieved tournament.", { tournament })
+          ResultOK("Successfully retrieved tournament.", { tournament: json })
         );
       } catch (err) {
         res.json(ResultError("Unable to retrieve tournament with ID: ", id));
@@ -180,6 +184,63 @@ export const TournamentRoutes: Route[] = [
             toFollow
           );
         } catch (err) {}
+      },
+    ],
+  },
+
+  /**
+   * Make submission to tournament.
+   */
+  {
+    path: "/tournament/:id/enter",
+    method: "post",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        const { mixtapeId } = req.body;
+
+        const username = (req.user as User).username;
+        const { id } = req.params;
+
+        try {
+          const result = await _TournamentService.MakeSubmission(
+            id,
+            username,
+            mixtapeId
+          );
+          res.json(ResultOK("Successfully entered the tournament."));
+        } catch (err) {
+          console.log(err);
+          res.status(400).json(ResultWarning("Unable to make submission."));
+        }
+      },
+    ],
+  },
+
+  /**
+   * Vote for mixtape in tournament.
+   */
+  {
+    path: "/tournament/:id/vote",
+    method: "post",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        const { mixtapeId } = req.body;
+        const { id } = req.params;
+        const username = (req.user as User).username;
+
+        try {
+          const result = await _TournamentService.VoteForMixtape(
+            id,
+            username,
+            mixtapeId
+          );
+          res.json(ResultOK("Successfully voted for mixtape!"));
+        } catch (err) {
+          console.log(err);
+          res.status(400).json(ResultWarning("Unable to vote for mixtape."));
+        }
       },
     ],
   },
