@@ -1,9 +1,10 @@
 import { Tournament } from "../model/TournamentModel";
-import { ResultError, ResultOK } from "../utils/ResultGenerator";
+import { ResultError, ResultOK, ResultWarning } from "../utils/ResultGenerator";
 import { _TournamentService } from "../app";
 import { Route } from "./_types";
 import { AuthService } from "../services/AuthService";
 import { User } from "../model/UserModel";
+import fs from "fs";
 
 export const TournamentRoutes: Route[] = [
   {
@@ -43,6 +44,32 @@ export const TournamentRoutes: Route[] = [
         res.json(ResultError("Unable to retrieve tournament with ID: ", id));
       }
     },
+  },
+
+  /**
+   * Get tournament cover image.
+   */
+  {
+    path: "/tournament/:id/cover",
+    method: "get",
+    handler: [
+      async (req, res) => {
+        const { id } = req.params;
+        const root =
+          process.env.UPLOAD_DIR || "/var/mujik/uploads/tournaments/";
+
+        fs.stat(root + id, (err, stat) => {
+          if (!err) {
+            res.setHeader("Content-Type", "image");
+            res.sendFile(id, { root });
+          } else {
+            res
+              .status(404)
+              .json(ResultWarning("Tournament cover image doesn't exist."));
+          }
+        });
+      },
+    ],
   },
 
   /**
