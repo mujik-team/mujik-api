@@ -21,12 +21,19 @@ export class TournamentService {
     this.db.createIndex({ isActive: 1, createdBy: 1 });
   }
 
-  async GetTournamentQuery(): Promise<Tournament[]> {
+  async GetAllTournaments(): Promise<Tournament[]> {
     const docs = await this.db.find().toArray();
 
     return docs.map((doc: any) =>
       Tournament.ParseFromJSON(doc)
     ) as Tournament[];
+  }
+
+  async GetMultipleTournaments(ids: string[]): Promise<Tournament[]> {
+    const results = await Promise.all(ids.map((id) => this.GetTournament(id)));
+    const tournaments = results.filter((t) => t !== undefined) as Tournament[];
+
+    return tournaments;
   }
 
   async GetTournament(id: string): Promise<Tournament | undefined> {

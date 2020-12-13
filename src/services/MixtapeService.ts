@@ -26,11 +26,9 @@ export class MixtapeService {
     const mixtape: any = [];
 
     await cursor.forEach((doc: any) => {
-      console.log(doc);
       mixtape.push(doc);
     });
 
-    console.log(mixtape);
     return mixtape;
   }
 

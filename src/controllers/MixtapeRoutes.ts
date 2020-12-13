@@ -180,6 +180,9 @@ export const MixtapeRoutes: Route[] = [
       },
     ],
   },
+  /**
+   * Get mixtapes by query
+   */
   {
     path: "/mixtape/query",
     method: "post",

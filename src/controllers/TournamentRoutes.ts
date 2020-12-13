@@ -7,12 +7,15 @@ import { User } from "../model/UserModel";
 import fs from "fs";
 
 export const TournamentRoutes: Route[] = [
+  /**
+   * Retrieve all tournaments.
+   */
   {
     path: "/tournament",
     method: "get",
     handler: async (req, res) => {
       try {
-        const results = await _TournamentService.GetTournamentQuery();
+        const results = await _TournamentService.GetAllTournaments();
 
         const tournaments = results.map((t) => Tournament.ToJSON(t));
 
@@ -50,6 +53,30 @@ export const TournamentRoutes: Route[] = [
     },
   },
 
+  /**
+   * Get multiple tournaments.
+   */
+  {
+    path: "/tournament/query",
+    method: "post",
+    handler: async (req, res) => {
+      try {
+        const { ids } = req.body;
+        const tournamentObjects = await _TournamentService.GetMultipleTournaments(
+          ids
+        );
+        const tournaments = tournamentObjects.map((obj) =>
+          Tournament.ToJSON(obj)
+        );
+
+        res.json(
+          ResultOK("Successfully retrieved tournaments.", { tournaments })
+        );
+      } catch (err) {
+        res.json(ResultWarning("Invalid query.", { tournaments: [] }));
+      }
+    },
+  },
   /**
    * Get tournament cover image.
    */
@@ -186,7 +213,12 @@ export const TournamentRoutes: Route[] = [
             user.username,
             toFollow
           );
-        } catch (err) {}
+
+          res.json(ResultOK("Successfully followed/unfollowed."));
+        } catch (err) {
+          console.log(err);
+          res.json(ResultWarning("Unable to follow/unfollow."));
+        }
       },
     ],
   },
