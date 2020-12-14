@@ -1,4 +1,4 @@
-import { Collection, MongoClient } from "mongodb";
+import { Collection } from "mongodb";
 import {
   Tournament,
   Submission,
@@ -221,6 +221,11 @@ export class TournamentService {
       const voteId = `${mixtapeId}-${date.toString()}`;
 
       voteData = { ...voteData, [voteId]: mixtapeId };
+      tournament.Voters.set(username, voteData);
+    } else {
+      const date = new Date();
+      const voteId = `${mixtapeId}-${date.toString()}`;
+      const voteData = { [voteId]: mixtapeId };
       tournament.Voters.set(username, voteData);
     }
 

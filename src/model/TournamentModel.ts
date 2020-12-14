@@ -33,8 +33,8 @@ export class Tournament {
     tournament.CreatedBy = doc.CreatedBy;
     tournament.Description = doc.Description;
     tournament.WinnerBy = doc.WinnerBy;
-    tournament.SubmissionDate = doc.SubmissionDate;
-    tournament.VoteDate = doc.VoteDate;
+    tournament.SubmissionDate = new Date(doc.SubmissionDate);
+    tournament.VoteDate = new Date(doc.VoteDate);
     tournament.NumWinners = doc.NumWinners;
     tournament.Rewards = doc.Rewards.map((r) => Reward.ParseFromJSON(r));
 
@@ -57,8 +57,8 @@ export class Tournament {
       tournament.CreatedBy = doc.CreatedBy;
       tournament.Description = doc.Description;
       tournament.WinnerBy = doc.WinnerBy;
-      tournament.SubmissionDate = doc.SubmissionDate;
-      tournament.VoteDate = doc.VoteDate;
+      tournament.SubmissionDate = new Date(doc.SubmissionDate);
+      tournament.VoteDate = new Date(doc.VoteDate);
       tournament.NumWinners = doc.NumWinners;
       tournament.Rewards = doc.Rewards;
       tournament.IsActive = doc.IsActive;
