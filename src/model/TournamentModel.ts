@@ -130,6 +130,7 @@ export class Tournament {
   }
 }
 
+
 export class Submission {
   constructor(public MixtapeId: string, public NumVotes: number = 0) {}
 }
