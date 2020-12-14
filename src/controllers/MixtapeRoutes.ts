@@ -274,4 +274,40 @@ export const MixtapeRoutes: Route[] = [
       },
     ],
   },
+  {
+    path: "/mixtape/fork",
+    method: "post",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res, next) => {
+        const  user  = req.body.username;
+        const  mixtape  = req.body.mixtape;
+
+        console.log(mixtape);
+        console.log(user)
+
+        try {
+
+          const newMixtape: any = await _MixtapeService.CreateMixtape(mixtape);
+
+          // Add the mixtape to the user
+          const currentUser: any = await _UserService.GetByUsername(user);
+          const profile = currentUser.profile;
+          profile.mixtapes.push(String(newMixtape._id));
+          const updatedUser = await _UserService.UpdateUserProfile(
+            user,
+            profile
+          );
+
+          res.json(
+            ResultOK(`Forked mixtape ${newMixtape}.`, {
+              mixtape: newMixtape,
+            })
+          );
+        } catch (err) {
+          res.json(ResultError("Error forking mixtape.", err));
+        }
+      }
+    ]
+  }
 ];
