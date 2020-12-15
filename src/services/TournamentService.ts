@@ -15,10 +15,13 @@ export class TournamentService {
     private db: Collection<Tournament>,
     private _UserService: UserService,
     private _MixtapeService: MixtapeService
-  ) {}
+  ) {
+    this.InitTournamentIndicies();
+  }
 
   InitTournamentIndicies() {
-    this.db.createIndex({ isActive: 1, createdBy: 1 });
+    this.db.createIndex({ SubmissionDate: 1, VoteDate: 1 });
+    this.db.createIndex({ CreatedBy: "text", Title: "text" });
   }
 
   async GetAllTournaments(): Promise<Tournament[]> {
@@ -44,6 +47,18 @@ export class TournamentService {
     const tournament = Tournament.ParseFromJSON(doc);
 
     return tournament;
+  }
+
+  async GetFeaturedTournaments() {
+    const officialUsers = ["mango", "jelly", "mujik", "theweeknd"];
+
+    const docs = await this.db
+      .find({ CreatedBy: { $in: officialUsers } })
+      .sort({ _id: -1 })
+      .limit(10)
+      .toArray();
+
+    return docs.map((d) => Tournament.ParseFromJSON(d));
   }
 
   async CreateTournament(tournamentDoc: any, createdBy: User) {
@@ -288,8 +303,10 @@ export class TournamentService {
       const xpEarned = numXP / Math.pow(2, winnerIndex);
       user.profile.level += Math.round(xpEarned);
 
+      const tournamentsWon = user.profile.tournamentsWon as any;
+
       // Add this as a Tournament won in user profile.
-      (user.profile.tournamentsWon as any)[tournamentId] = {
+      tournamentsWon[tournamentId] = {
         Title: tournament.Title,
         Placement: winnerIndex + 1,
       };

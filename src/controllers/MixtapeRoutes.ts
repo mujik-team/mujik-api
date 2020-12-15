@@ -8,6 +8,22 @@ import fs from "fs";
 
 export const MixtapeRoutes: Route[] = [
   /**
+   * Get featured mixtapes.
+   */
+
+  {
+    path: "/mixtape/featured",
+    method: "get",
+    handler: async (req, res) => {
+      try {
+        const mixtapes = await _MixtapeService.GetFeaturedMixtapes();
+        res.json(ResultOK("Retrieved mixtapes", { mixtapes }));
+      } catch (err) {
+        res.json(ResultError("Unable to retrieve mixtapes", { mixtapes: [] }));
+      }
+    },
+  },
+  /**
    * Get a mixtape by ID.
    */
   {
@@ -204,6 +220,9 @@ export const MixtapeRoutes: Route[] = [
       },
     ],
   },
+  /**
+   * Get multiple mixtapes by id.
+   */
   {
     path: "/mixtape/query/id",
     method: "post",
@@ -235,6 +254,10 @@ export const MixtapeRoutes: Route[] = [
       },
     ],
   },
+
+  /**
+   * Follow Mixtape
+   */
   {
     path: "/mixtape/:id/follow",
     method: "post",
@@ -281,6 +304,9 @@ export const MixtapeRoutes: Route[] = [
       },
     ],
   },
+  /**
+   * Fork Mixtape
+   */
   {
     path: "/mixtape/fork",
     method: "post",

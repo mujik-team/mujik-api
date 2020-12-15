@@ -29,6 +29,27 @@ export const TournamentRoutes: Route[] = [
       }
     },
   },
+
+  /**
+   * Get featured tournaments.
+   */
+  {
+    path: "/tournament/featured/",
+    method: "get",
+    handler: async (req, res) => {
+      try {
+        const tournamentObjs = await _TournamentService.GetFeaturedTournaments();
+        const tournaments = tournamentObjs
+          .filter((t) => t !== undefined)
+          .map((t) => Tournament.ToJSON(t!));
+        res.json(
+          ResultOK("Successfully retrieved tournaments!", {
+            tournaments,
+          })
+        );
+      } catch (err) {}
+    },
+  },
   /**
    * Get a tournament by ID.
    */
@@ -77,6 +98,7 @@ export const TournamentRoutes: Route[] = [
       }
     },
   },
+
   /**
    * Get tournament cover image.
    */

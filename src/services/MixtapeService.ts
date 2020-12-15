@@ -3,7 +3,14 @@ import { Collection } from "mongodb";
 const mongo = require("mongodb");
 
 export class MixtapeService {
-  constructor(private db: Collection<Mixtape>) {}
+  constructor(private db: Collection<Mixtape>) {
+    this.InitMixtapeIndices();
+  }
+
+  InitMixtapeIndices() {
+    this.db.createIndex({ createdBy: "text", mixtapeName: "text" });
+    this.db.createIndex({ lastUpdated: 1, isPrivate: 1, followers: 1 });
+  }
 
   async GetMixtape(id: string): Promise<Mixtape | null> {
     const mixtape = await this.db.findOne({ _id: mongo.ObjectID(id) });
@@ -30,6 +37,16 @@ export class MixtapeService {
     });
 
     return mixtape;
+  }
+
+  async GetFeaturedMixtapes() {
+    const docs = await this.db
+      .find({ isPrivate: false })
+      .sort({ lastUpdated: -1, followers: 1 })
+      .limit(10)
+      .toArray();
+
+    return docs;
   }
 
   async CreateMixtape(mixtape: Mixtape): Promise<Mixtape> {

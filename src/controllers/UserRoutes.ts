@@ -14,6 +14,20 @@ import fs from "fs";
  */
 
 export const UserRoutes: Route[] = [
+  {
+    path: "/user/featured",
+    method: "get",
+    handler: async (req, res) => {
+      try {
+        const users = await _UserService.GetFeaturedUsers();
+
+        res.json(ResultOK("Success!", { users }));
+      } catch (err) {
+        console.log(err);
+        res.json(ResultOK("Error!", { users: [] }));
+      }
+    },
+  },
   /**
    * Get a user by username.
    */

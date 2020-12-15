@@ -8,13 +8,26 @@ export class UserService {
   }
 
   async InitUserIndices() {
-    this.db.createIndex({ username: 1 }, { unique: true });
-    this.db.createIndex({ email: 1 }, { unique: true });
+    this.db.createIndex({ username: 1, email: 1 }, { unique: true });
+    this.db.createIndex({
+      "profile.totalFollowers": 1,
+      "profile.totalFollowing": 1,
+      "profile.level": 1,
+    });
   }
 
   async GetUser(id: string): Promise<User | null> {
     const user = await this.db.findOne({ _id: mongo.ObjectID(id) });
     return user;
+  }
+
+  async GetFeaturedUsers() {
+    const docs = await this.db
+      .find()
+      .sort({ "profile.totalFollowers": -1, "profile.level": -1 })
+      .limit(10)
+      .toArray();
+    return docs;
   }
 
   async GetByUsername(username: string): Promise<User | undefined> {
