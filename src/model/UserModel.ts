@@ -64,7 +64,7 @@ export class User {
 class Profile {
   bio: string = "";
   level: number = 1;
-  coins: number = 0;
+  coins: number = 5000;
 
   favGenre = new Array<string>();
   favArtist = new Array<string>();
