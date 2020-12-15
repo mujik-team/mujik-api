@@ -78,4 +78,7 @@ class Profile {
   tournamentsJoined = new Array<string>();
   tournamentsCreated = new Array<string>();
   tournamentsFollowing = new Array<string>();
+  tournamentsWon: TournamentsWon = new Map();
 }
+
+type TournamentsWon = Map<string, { Title: string; Placement: number }>;

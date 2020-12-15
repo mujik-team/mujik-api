@@ -17,7 +17,6 @@ export class Tournament {
   // Rewards offered by winning the tournament
   public Rewards: Reward[] = new Array<Reward>();
 
-  public Entrants = new Map<string, string>();
   public Voters = new Map<string, any>();
   public Restrictions: Restriction[] = new Array<Restriction>();
   // Special flags that alter the tournament's behaviour.
@@ -73,11 +72,6 @@ export class Tournament {
             ])
           )
         : new Map();
-      tournament.Entrants = doc.Entrants
-        ? new Map(
-            Object.keys(doc.Entrants)?.map((key) => [key, doc.Entrants[key]])
-          )
-        : new Map();
 
       tournament.Voters = doc.Voters
         ? new Map(Object.keys(doc.Voters)?.map((key) => [key, doc.Voters[key]]))
@@ -93,15 +87,10 @@ export class Tournament {
 
   static ToJSON(tournament: Tournament) {
     const Submissions: any = {};
-    const Entrants: any = {};
     const Voters: any = {};
 
     tournament.Submissions.forEach((v, k) => {
       Submissions[k] = v;
-    });
-
-    tournament.Entrants.forEach((v, k) => {
-      Entrants[k] = v;
     });
 
     tournament.Voters.forEach((v, k) => {
@@ -115,7 +104,6 @@ export class Tournament {
       Description: tournament.Description,
       IsActive: tournament.IsActive,
       Submissions,
-      Entrants,
       Voters,
       Restrictions: tournament.Restrictions,
       Modifiers: tournament.Modifiers,
@@ -130,9 +118,12 @@ export class Tournament {
   }
 }
 
-
 export class Submission {
-  constructor(public MixtapeId: string, public NumVotes: number = 0) {}
+  constructor(
+    public MixtapeId: string,
+    public NumVotes: number = 0,
+    public RewardsClaimed = false
+  ) {}
 }
 
 export class Restriction {

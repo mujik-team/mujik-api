@@ -274,7 +274,34 @@ export const TournamentRoutes: Route[] = [
           res.json(ResultOK("Successfully voted for mixtape!"));
         } catch (err) {
           console.log(err);
-          res.status(400).json(ResultWarning("Unable to vote for mixtape."));
+          res
+            .status(400)
+            .json(ResultWarning("Unable to vote for mixtape.", { err }));
+        }
+      },
+    ],
+  },
+  /**
+   * Redeem a reward.
+   */
+  {
+    path: "/tournament/:id/redeem",
+    method: "post",
+    handler: [
+      AuthService.isAuthenticated,
+      async (req, res) => {
+        const { id } = req.params;
+        const username = (req.user as User).username;
+
+        try {
+          const rewards = await _TournamentService.RedeemRewards(id, username);
+
+          res.json(ResultOK("Successfully redeemed rewards!", { rewards }));
+        } catch (err) {
+          console.log(err);
+          res
+            .status(400)
+            .json(ResultWarning("Unable to redeem rewards.", { err }));
         }
       },
     ],

@@ -50,7 +50,7 @@ export class TournamentService {
     const parsedTournament = Tournament.CreateFromJSON(tournamentDoc);
 
     // Calculate XP Rewards.
-    const xp = 50 * Math.log2(createdBy.profile.level + 1) * 100;
+    const xp = 50 * Math.log2(createdBy.profile.level + 1) * 200;
     parsedTournament.Rewards.push({
       Type: RewardType.XP,
       Value: xp,
@@ -108,7 +108,6 @@ export class TournamentService {
       ...toUpdateDoc,
       ...userDoc,
     };
-    console.log(unionDoc);
 
     const result = await this.db.replaceOne(
       { _id: new ObjectID(id) },
@@ -169,15 +168,13 @@ export class TournamentService {
       throw Error("Unable to submit. Tournament is not in submission state.");
 
     // Check if user has already entered the tournament.
-    if (tournament.Entrants.has(user.username))
+    if (tournament.Submissions.has(user.username))
       throw Error("User has already made an entry in this tournament.");
 
     // Check if the mixtape is private.
     if (mixtape.isPrivate) throw Error("This mixtape is private.");
 
-    // @TODO Check if mixtape meets restrictions...
-    tournament.Submissions.set(mixtapeId, new Submission(mixtapeId));
-    tournament.Entrants.set(user.username, "");
+    tournament.Submissions.set(user.username, new Submission(mixtapeId));
 
     user.profile.tournamentsJoined.push(tournamentId);
 
@@ -203,7 +200,7 @@ export class TournamentService {
     if (!mixtape) throw Error("Mixtape with that ID doesn't exist");
 
     // Check if mixtape was submitted to tournament.
-    const submission = tournament.Submissions.get(mixtapeId);
+    const submission = tournament.Submissions.get(mixtape.createdBy);
     if (!submission)
       throw Error("Mixtape with that ID was not submitted to this tournament.");
 
@@ -218,13 +215,13 @@ export class TournamentService {
     if (tournament.Voters.has(username)) {
       let voteData = tournament.Voters.get(username);
       const date = new Date();
-      const voteId = `${mixtapeId}-${date.toString()}`;
+      const voteId = `${mixtapeId}-${date.toString()}-${Math.random}`;
 
       voteData = { ...voteData, [voteId]: mixtapeId };
       tournament.Voters.set(username, voteData);
     } else {
       const date = new Date();
-      const voteId = `${mixtapeId}-${date.toString()}`;
+      const voteId = `${mixtapeId}-${date.toString()}-${Math.random}`;
       const voteData = { [voteId]: mixtapeId };
       tournament.Voters.set(username, voteData);
     }
@@ -234,5 +231,96 @@ export class TournamentService {
 
     // Add Tournament to user's following.
     await this.FollowTournament(tournamentId, username, true);
+  }
+
+  async RedeemRewards(tournamentId: string, username: string) {
+    const tournament = await this.GetTournament(tournamentId);
+    const user = await this._UserService.GetByUsername(username);
+
+    // Check if tournament exists.
+    if (!tournament) throw Error("Tournament with that ID doesn't exist.");
+
+    // Check if user exists.
+    if (!user) throw Error("User with that ID doesn't exist.");
+
+    // Check if user entered the tournament.
+    if (!tournament.Submissions.has(username))
+      throw Error("User with that ID never entered this tournament.");
+
+    // Check if user has already redeemed their rewards.
+
+    const userSubmission = tournament.Submissions.get(username);
+    if (userSubmission!.RewardsClaimed)
+      throw Error("User has already claimed their rewards!");
+
+    // Calculate rewards earned by user.
+    const userSubmissionId = tournament.Submissions.get(username)!.MixtapeId;
+    const numCoins = tournament.Rewards[0].Value;
+    const numXP = tournament.Rewards[1].Value;
+
+    // Check if user is winner.
+    const submissions = [...tournament.Submissions].map(
+      ([name, value]) => value
+    );
+
+    submissions.sort((t1, t2) => {
+      const compare = t2.NumVotes - t1.NumVotes;
+
+      if (compare == 0) return t2.MixtapeId < t1.MixtapeId ? 0 : 1;
+      else return compare;
+    });
+
+    const winners = submissions.slice(0, 3);
+    const winnerIndex = winners.findIndex(
+      (s) => s.MixtapeId == userSubmissionId
+    );
+
+    // User is one of the winners.
+    if (winnerIndex !== -1) {
+      // User gets 1/2^n fraction of the reward
+      // Where n is their placement in the tournament.
+      // So someone who is 1st will get 1/2, 2nd 1/4 and so on.
+      // This is different for XP where it is 2^(n-1)
+
+      const coinsEarned = numCoins / Math.pow(2, winnerIndex + 1);
+      user.profile.coins += Math.round(coinsEarned);
+
+      const xpEarned = numXP / Math.pow(2, winnerIndex);
+      user.profile.level += Math.round(xpEarned);
+
+      // Add this as a Tournament won in user profile.
+      (user.profile.tournamentsWon as any)[tournamentId] = {
+        Title: tournament.Title,
+        Placement: winnerIndex + 1,
+      };
+
+      // Mark reward as claimed.
+      userSubmission!.RewardsClaimed = true;
+      tournament.Submissions.set(username, userSubmission!);
+
+      await Promise.all([
+        this._UserService.UpdateUser(username, user),
+        this.UpdateTournament(tournamentId, Tournament.ToJSON(tournament)),
+      ]);
+
+      return { coins: coinsEarned, xp: xpEarned };
+    }
+    // User didn't win.
+    else {
+      // User just gains 1000 xp.
+      if (tournament.CreatedBy !== user.username) user.profile.level += 1000;
+
+      // Mark reward as claimed.
+      const userSubmission = tournament.Submissions.get(username);
+      userSubmission!.RewardsClaimed = true;
+      tournament.Submissions.set(username, userSubmission!);
+
+      await Promise.all([
+        this._UserService.UpdateUser(username, user),
+        this.UpdateTournament(tournamentId, Tournament.ToJSON(tournament)),
+      ]);
+
+      return { xp: 1000 };
+    }
   }
 }

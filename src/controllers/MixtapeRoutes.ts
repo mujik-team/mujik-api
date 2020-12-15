@@ -212,17 +212,24 @@ export const MixtapeRoutes: Route[] = [
       async (req, res, next) => {
         const { ids } = req.body;
         try {
-          const mixtapes = await ids.map(async (id: string) => {
-            const mixtape: any = await _MixtapeService.GetMixtape(id);
-            // console.log(mixtape);
-            return mixtape;
+          const mixtapeRequests = await ids.map(async (id: string) => {
+            try {
+              return await _MixtapeService.GetMixtape(id);
+            } catch (err) {
+              console.log(err);
+              return undefined;
+            }
           });
-          Promise.all(mixtapes)
-            .then((result) =>
-              res.json(ResultOK("Retrieved mixtapes", { mixtapes: result }))
+
+          Promise.all(mixtapeRequests).then((result) =>
+            res.json(
+              ResultOK("Retrieved mixtapes", {
+                mixtapes: result.filter((m) => m !== undefined),
+              })
             )
-            .catch((err) => res.json(ResultError("Cannot retrieve mixtapes.")));
+          );
         } catch (err) {
+          console.log(err);
           res.json(ResultError("Error retrieving mixtapes"));
         }
       },
@@ -280,14 +287,13 @@ export const MixtapeRoutes: Route[] = [
     handler: [
       AuthService.isAuthenticated,
       async (req, res, next) => {
-        const  user  = req.body.username;
-        const  mixtape  = req.body.mixtape;
+        const user = req.body.username;
+        const mixtape = req.body.mixtape;
 
         console.log(mixtape);
-        console.log(user)
+        console.log(user);
 
         try {
-
           const newMixtape: any = await _MixtapeService.CreateMixtape(mixtape);
 
           // Add the mixtape to the user
@@ -307,7 +313,7 @@ export const MixtapeRoutes: Route[] = [
         } catch (err) {
           res.json(ResultError("Error forking mixtape.", err));
         }
-      }
-    ]
-  }
+      },
+    ],
+  },
 ];
