@@ -32,7 +32,7 @@ export const AuthRoutes: Route[] = [
           }
 
           user.password = newPassword;
-          await _UserService.UpdateUser(username, user);
+          await _UserService.UpdateUser(username, user, false);
           res.json(ResultOK("Successfully reset credentials."));
         } else {
           res.json(ResultWarning("Incorrect reset code."));

@@ -46,9 +46,13 @@ export class UserService {
     return user;
   }
 
-  async UpdateUser(username: string, user: User): Promise<any> {
+  async UpdateUser(
+    username: string,
+    user: User,
+    remove: boolean = true
+  ): Promise<any> {
     const userDoc: any = user;
-    delete userDoc["password"];
+    if (remove) delete userDoc["password"];
     delete userDoc["_id"];
 
     await this.db.updateOne({ username }, { $set: userDoc }, { upsert: false });
