@@ -3,7 +3,7 @@ import { AuthService } from "../services/AuthService";
 import { _UserService } from "../app";
 import { _MixtapeService } from "../app";
 import { Mixtape } from "../model/MixtapeModel";
-import { ResultError, ResultOK } from "../utils/ResultGenerator";
+import { ResultError, ResultOK, ResultWarning } from "../utils/ResultGenerator";
 import fs from "fs";
 
 export const MixtapeRoutes: Route[] = [
@@ -34,13 +34,16 @@ export const MixtapeRoutes: Route[] = [
       async (req, res) => {
         console.log(req.params);
         const { id } = req.params;
-        const mixtape: any = await _MixtapeService.GetMixtape(id);
-        if (mixtape) {
+
+        try {
+          const mixtape: any = await _MixtapeService.GetMixtape(id);
           res.json(
             ResultOK(`Retrieved mixtape ${mixtape.mixtapeName}.`, { mixtape })
           );
-        } else {
-          res.json(ResultError("Mixtape with that id doesn't exist."));
+        } catch (err) {
+          res
+            .status(404)
+            .json(ResultWarning("Unable to retrieve mixtape with that id."));
         }
       },
     ],

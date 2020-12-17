@@ -42,7 +42,7 @@ export class MixtapeService {
   async GetFeaturedMixtapes() {
     const docs = await this.db
       .find({ isPrivate: false })
-      .sort({ lastUpdated: -1, followers: 1 })
+      .sort({ followers: 1, lastUpdated: -1 })
       .limit(10)
       .toArray();
 
